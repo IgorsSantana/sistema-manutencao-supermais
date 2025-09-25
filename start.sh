@@ -1,14 +1,11 @@
 #!/bin/bash
 
-echo "========================================"
-echo "Sistema de Manutencao - Supermercado Santo Antonio Super Mais"
-echo "========================================"
-echo ""
-echo "Iniciando aplicacao..."
-echo ""
-echo "Acesse: http://localhost:5000"
-echo ""
-echo "Para parar a aplicacao, pressione Ctrl+C"
-echo ""
+# Inicializar banco de dados
+python -c "
+from app import create_tables
+create_tables()
+print('Banco de dados inicializado!')
+"
 
-python3 app.py
+# Executar com gunicorn
+exec gunicorn --bind 0.0.0.0:$PORT --workers 2 app:app

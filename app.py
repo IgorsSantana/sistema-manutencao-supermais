@@ -282,10 +282,10 @@ def create_tables():
     with app.app_context():
         db.create_all()
 
+# Inicializar banco de dados quando o módulo for importado
+create_tables()
+
 if __name__ == '__main__':
-    create_tables()
+    # Apenas para desenvolvimento local
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
-else:
-    # Para produção (gunicorn)
-    create_tables()
+    app.run(host='0.0.0.0', port=port, debug=True)
