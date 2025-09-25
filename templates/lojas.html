@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Lojas - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🏪 Lojas Cadastradas</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <p>Total de lojas: <strong>{{ lojas|length }}</strong></p>
+            <a href="/lojas/cadastrar" role="button" class="btn btn-primary">➕ Nova Loja</a>
+        </div>
+        
+        {% if not lojas %}
+            <div style="text-align: center; padding: 2rem; color: #1f2937;">
+                <h4>Nenhuma loja cadastrada</h4>
+                <p>Comece cadastrando a primeira loja do sistema.</p>
+                <a href="/lojas/cadastrar" role="button" class="btn btn-primary">Cadastrar Primeira Loja</a>
+            </div>
+        {% else %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                {% for loja in lojas %}
+                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; background: white;">
+                        <h4>{{ loja.nome }}</h4>
+                        
+                        {% if loja.endereco %}
+                            <p><strong>📍</strong> {{ loja.endereco }}</p>
+                        {% endif %}
+                        
+                        {% if loja.telefone %}
+                            <p><strong>📞</strong> {{ loja.telefone }}</p>
+                        {% endif %}
+                        
+                        <p class="date">
+                            <strong>📅</strong> Cadastrada em {{ loja.data_cadastro.strftime('%d/%m/%Y') }}
+                        </p>
+                        
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            <a href="/lojas/{{ loja.id }}" role="button" class="btn btn-secondary" style="flex: 1;">
+                                Ver Detalhes
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

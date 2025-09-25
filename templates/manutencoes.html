@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Manutenções - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🔧 Manutenções Realizadas</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <p>Total de manutenções: <strong>{{ manutencoes|length }}</strong></p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="/manutencoes" role="button" class="btn btn-secondary {% if tipo_atual == 'todas' %}btn-primary{% endif %}">Todas</a>
+                <a href="/manutencoes?tipo=loja" role="button" class="btn btn-secondary {% if tipo_atual == 'loja' %}btn-primary{% endif %}">🏪 Lojas</a>
+                <a href="/manutencoes?tipo=veiculo" role="button" class="btn btn-secondary {% if tipo_atual == 'veiculo' %}btn-primary{% endif %}">🚗 Veículos</a>
+                <a href="/manutencoes/cadastrar" role="button" class="btn btn-primary">➕ Nova Manutenção</a>
+            </div>
+        </div>
+        
+        {% if not manutencoes %}
+            <div style="text-align: center; padding: 2rem; color: #1f2937;">
+                <h4>Nenhuma manutenção registrada</h4>
+                <p>Comece registrando a primeira manutenção do sistema.</p>
+                <a href="/manutencoes/cadastrar" role="button" class="btn btn-primary">Registrar Primeira Manutenção</a>
+            </div>
+        {% else %}
+            {% for manutencao in manutencoes %}
+                <div class="maintenance-item {{ manutencao.tipo }}">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <h4>{{ manutencao.titulo }}</h4>
+                            <p class="date">📅 {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</p>
+                            
+                            {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                                <p><strong>🏪</strong> {{ manutencao.loja.nome }}</p>
+                            {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                                <p><strong>🚗</strong> {{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}</p>
+                            {% endif %}
+                            
+                            {% if manutencao.descricao %}
+                                <p style="margin-top: 0.5rem; color: #1f2937; font-weight: 600;">
+                                    {{ manutencao.descricao[:150] }}{% if manutencao.descricao|length > 150 %}...{% endif %}
+                                </p>
+                            {% endif %}
+                            
+                            {% if manutencao.fotos %}
+                                <p style="margin-top: 0.5rem;">
+                                    <strong>📷</strong> {{ manutencao.fotos|length }} foto(s)
+                                </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div style="text-align: right; min-width: 120px;">
+                            <div class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
+                            <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary" style="margin-top: 0.5rem; width: 100%;">
+                                Ver Detalhes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ loja.nome }} - Detalhes da Loja{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🏪 {{ loja.nome }}</h3>
+    </div>
+    <div class="card-body">
+        <div class="grid">
+            <div>
+                <h4>Informações da Loja</h4>
+                {% if loja.endereco %}
+                    <p><strong>📍 Endereço:</strong> {{ loja.endereco }}</p>
+                {% endif %}
+                {% if loja.telefone %}
+                    <p><strong>📞 Telefone:</strong> {{ loja.telefone }}</p>
+                {% endif %}
+                <p><strong>📅 Cadastrada em:</strong> {{ loja.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</p>
+            </div>
+            <div>
+                <h4>Estatísticas</h4>
+                <p><strong>🔧 Manutenções:</strong> {{ manutencoes|length }}</p>
+                {% if manutencoes %}
+                    {% set total_gasto = manutencoes|sum(attribute='preco_total') %}
+                    <p><strong>💰 Total Gasto:</strong> R$ {{ "%.2f"|format(total_gasto) }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <a href="/lojas" role="button" class="btn btn-secondary">← Voltar para Lojas</a>
+            <a href="/manutencoes/cadastrar?loja_id={{ loja.id }}" role="button" class="btn btn-primary">🔧 Nova Manutenção</a>
+        </div>
+    </div>
+</div>
+
+{% if manutencoes %}
+<div class="card">
+    <div class="card-header">
+        <h3>🔧 Manutenções Realizadas</h3>
+    </div>
+    <div class="card-body">
+        {% for manutencao in manutencoes %}
+            <div class="maintenance-item loja">
+                <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                    <div>
+                        <h4>{{ manutencao.titulo }}</h4>
+                        <p class="date">📅 {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</p>
+                        {% if manutencao.descricao %}
+                            <p>{{ manutencao.descricao[:100] }}{% if manutencao.descricao|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
+                        <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary" style="margin-top: 0.5rem;">
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body" style="text-align: center; padding: 2rem; color: #1f2937;">
+        <h4>Nenhuma manutenção registrada</h4>
+        <p>Esta loja ainda não possui manutenções cadastradas.</p>
+        <a href="/manutencoes/cadastrar?loja_id={{ loja.id }}" role="button" class="btn btn-primary">Registrar Primeira Manutenção</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

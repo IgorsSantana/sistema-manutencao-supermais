@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<!-- Estatísticas Gerais -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_lojas }}</div>
+        <div class="stat-label">Lojas Cadastradas</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_veiculos }}</div>
+        <div class="stat-label">Veículos na Frota</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_manutencoes }}</div>
+        <div class="stat-label">Manutenções Realizadas</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">R$ <span id="total-gasto">-</span></div>
+        <div class="stat-label">Total Gasto</div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="card">
+    <div class="card-header">
+        <h3>🚀 Ações Rápidas</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <a href="/lojas/cadastrar" role="button" class="btn btn-primary">➕ Nova Loja</a>
+            <a href="/veiculos/cadastrar" role="button" class="btn btn-primary">🚗 Novo Veículo</a>
+            <a href="/manutencoes/cadastrar" role="button" class="btn btn-primary">🔧 Nova Manutenção</a>
+        </div>
+    </div>
+</div>
+
+<!-- Lojas Cadastradas -->
+<div class="card">
+    <div class="card-header">
+        <h3>🏪 Lojas Cadastradas</h3>
+    </div>
+    <div class="card-body">
+        {% if not lojas %}
+            <p>Nenhuma loja cadastrada ainda. <a href="/lojas/cadastrar">Cadastrar primeira loja</a></p>
+        {% else %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                {% for loja in lojas %}
+                    <div class="loja-card">
+                        <h4>{{ loja.nome }}</h4>
+                        {% if loja.endereco %}
+                            <p><strong>📍</strong> {{ loja.endereco }}</p>
+                        {% endif %}
+                        {% if loja.telefone %}
+                            <p><strong>📞</strong> {{ loja.telefone }}</p>
+                        {% endif %}
+                        <a href="/lojas/{{ loja.id }}" role="button" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
+                            Ver Detalhes
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Frota de Veículos -->
+<div class="card">
+    <div class="card-header">
+        <h3>🚗 Frota de Veículos</h3>
+    </div>
+    <div class="card-body">
+        {% if not veiculos %}
+            <p>Nenhum veículo cadastrado ainda. <a href="/veiculos/cadastrar">Cadastrar primeiro veículo</a></p>
+        {% else %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                {% for veiculo in veiculos %}
+                    <div class="veiculo-card">
+                        <h4>{{ veiculo.placa }}</h4>
+                        <p><strong>🚗</strong> {{ veiculo.modelo }}</p>
+                        {% if veiculo.marca %}
+                            <p><strong>🏭</strong> {{ veiculo.marca }}</p>
+                        {% endif %}
+                        {% if veiculo.ano %}
+                            <p><strong>📅</strong> {{ veiculo.ano }}</p>
+                        {% endif %}
+                        <a href="/veiculos/{{ veiculo.id }}" role="button" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
+                            Ver Detalhes
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Manutenções Recentes -->
+<div class="card">
+    <div class="card-header">
+        <h3>🔧 Manutenções Recentes</h3>
+    </div>
+    <div class="card-body">
+        {% if not manutencoes_recentes %}
+            <p>Nenhuma manutenção registrada ainda. <a href="/manutencoes/cadastrar">Registrar primeira manutenção</a></p>
+        {% else %}
+            {% for manutencao in manutencoes_recentes %}
+                <div class="maintenance-item {{ manutencao.tipo }}">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                        <div>
+                            <h4>{{ manutencao.titulo }}</h4>
+                            <p class="date">📅 {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</p>
+                            {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                                <p><strong>🏪</strong> {{ manutencao.loja.nome }}</p>
+                            {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                                <p><strong>🚗</strong> {{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}</p>
+                            {% endif %}
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
+                            <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary" style="margin-top: 0.5rem;">
+                                Ver Detalhes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Carregar estatísticas via API
+    fetch('/api/estatisticas')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-gasto').textContent = data.total_gasto.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar estatísticas:', error);
+        });
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar Loja - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🏪 Cadastrar Nova Loja</h3>
+    </div>
+    <div class="card-body">
+        <form action="/lojas/cadastrar" method="POST">
+            <div class="grid">
+                <div>
+                    <label for="nome_loja">Nome da Loja *</label>
+                    <input type="text" id="nome_loja" name="nome_loja" placeholder="Ex: Loja Centro" required>
+                </div>
+                <div>
+                    <label for="telefone">Telefone</label>
+                    <input type="tel" id="telefone" name="telefone" placeholder="(11) 99999-9999">
+                </div>
+            </div>
+            
+            <div>
+                <label for="endereco">Endereço</label>
+                <input type="text" id="endereco" name="endereco" placeholder="Rua, Número, Bairro, Cidade">
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">💾 Salvar Loja</button>
+                <a href="/lojas" role="button" class="btn btn-secondary">❌ Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

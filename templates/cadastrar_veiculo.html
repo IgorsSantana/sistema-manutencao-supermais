@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar Veículo - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🚗 Cadastrar Novo Veículo</h3>
+    </div>
+    <div class="card-body">
+        <form action="/veiculos/cadastrar" method="POST">
+            <div class="grid">
+                <div>
+                    <label for="placa_veiculo">Placa *</label>
+                    <input type="text" id="placa_veiculo" name="placa_veiculo" placeholder="ABC-1234" required style="text-transform: uppercase;">
+                </div>
+                <div>
+                    <label for="modelo_veiculo">Modelo *</label>
+                    <input type="text" id="modelo_veiculo" name="modelo_veiculo" placeholder="Ex: Fiat Uno" required>
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div>
+                    <label for="marca">Marca</label>
+                    <input type="text" id="marca" name="marca" placeholder="Ex: Fiat">
+                </div>
+                <div>
+                    <label for="ano">Ano</label>
+                    <input type="number" id="ano" name="ano" placeholder="2020" min="1900" max="2030">
+                </div>
+                <div>
+                    <label for="cor">Cor</label>
+                    <input type="text" id="cor" name="cor" placeholder="Ex: Branco">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">💾 Salvar Veículo</button>
+                <a href="/veiculos" role="button" class="btn btn-secondary">❌ Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Formatar placa automaticamente
+    document.getElementById('placa_veiculo').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        if (value.length > 3) {
+            value = value.substring(0, 3) + '-' + value.substring(3, 7);
+        }
+        e.target.value = value;
+    });
+</script>
+{% endblock %}

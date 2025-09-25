@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Frota de Veículos - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🚗 Frota de Veículos</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <p>Total de veículos: <strong>{{ veiculos|length }}</strong></p>
+            <a href="/veiculos/cadastrar" role="button" class="btn btn-primary">➕ Novo Veículo</a>
+        </div>
+        
+        {% if not veiculos %}
+            <div style="text-align: center; padding: 2rem; color: #1f2937;">
+                <h4>Nenhum veículo cadastrado</h4>
+                <p>Comece cadastrando o primeiro veículo da frota.</p>
+                <a href="/veiculos/cadastrar" role="button" class="btn btn-primary">Cadastrar Primeiro Veículo</a>
+            </div>
+        {% else %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                {% for veiculo in veiculos %}
+                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; background: white;">
+                        <h4>{{ veiculo.placa }}</h4>
+                        <p><strong>🚗</strong> {{ veiculo.modelo }}</p>
+                        
+                        {% if veiculo.marca %}
+                            <p><strong>🏭</strong> {{ veiculo.marca }}</p>
+                        {% endif %}
+                        
+                        {% if veiculo.ano %}
+                            <p><strong>📅</strong> {{ veiculo.ano }}</p>
+                        {% endif %}
+                        
+                        {% if veiculo.cor %}
+                            <p><strong>🎨</strong> {{ veiculo.cor }}</p>
+                        {% endif %}
+                        
+                        <p class="date">
+                            <strong>📅</strong> Cadastrado em {{ veiculo.data_cadastro.strftime('%d/%m/%Y') }}
+                        </p>
+                        
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            <a href="/veiculos/{{ veiculo.id }}" role="button" class="btn btn-secondary" style="flex: 1;">
+                                Ver Detalhes
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

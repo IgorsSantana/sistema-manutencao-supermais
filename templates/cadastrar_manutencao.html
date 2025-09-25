@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar Manutenção - Sistema de Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🔧 Cadastrar Nova Manutenção</h3>
+    </div>
+    <div class="card-body">
+        <form action="/manutencoes/cadastrar" method="POST" enctype="multipart/form-data">
+            <div class="grid">
+                <div>
+                    <label for="tipo">Tipo de Manutenção *</label>
+                    <select id="tipo" name="tipo" required onchange="toggleTipoManutencao()">
+                        <option value="">Selecione o tipo</option>
+                        <option value="loja" {% if request.args.get('loja_id') %}selected{% endif %}>🏪 Loja</option>
+                        <option value="veiculo" {% if request.args.get('veiculo_id') %}selected{% endif %}>🚗 Veículo</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="data_manutencao">Data da Manutenção</label>
+                    <input type="date" id="data_manutencao" name="data_manutencao">
+                </div>
+            </div>
+            
+            <div>
+                <label for="titulo">Título da Manutenção *</label>
+                <input type="text" id="titulo" name="titulo" placeholder="Ex: Troca de lâmpadas" required>
+            </div>
+            
+            <div>
+                <label for="descricao">Descrição</label>
+                <textarea id="descricao" name="descricao" rows="4" placeholder="Descreva os detalhes da manutenção realizada..."></textarea>
+            </div>
+            
+            <div class="grid">
+                <div>
+                    <label for="preco_total">Preço Total (R$)</label>
+                    <input type="number" id="preco_total" name="preco_total" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div id="loja_select" style="display: none;">
+                    <label for="loja_id">Loja *</label>
+                    <select id="loja_id" name="loja_id">
+                        <option value="">Selecione a loja</option>
+                        {% for loja in lojas %}
+                            <option value="{{ loja.id }}" {% if request.args.get('loja_id')|int == loja.id %}selected{% endif %}>
+                                {{ loja.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="veiculo_select" style="display: none;">
+                    <label for="veiculo_id">Veículo *</label>
+                    <select id="veiculo_id" name="veiculo_id">
+                        <option value="">Selecione o veículo</option>
+                        {% for veiculo in veiculos %}
+                            <option value="{{ veiculo.id }}" {% if request.args.get('veiculo_id')|int == veiculo.id %}selected{% endif %}>
+                                {{ veiculo.placa }} - {{ veiculo.modelo }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label for="fotos">📷 Fotos da Manutenção</label>
+                <input type="file" id="fotos" name="fotos" multiple accept="image/*" onchange="previewImages()" style="display: none;">
+                <div class="upload-area" onclick="document.getElementById('fotos').click()">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
+                    <p style="margin: 0; color: #1f2937; font-weight: 600;">Toque para selecionar fotos</p>
+                    <small style="color: #6b7280;">PNG, JPG, JPEG, GIF, WEBP (máx. 16MB)</small>
+                </div>
+            </div>
+            
+            <div id="image-preview" style="display: none; margin-top: 1rem;">
+                <h4>Pré-visualização das Imagens:</h4>
+                <div id="preview-container" class="photo-gallery"></div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">💾 Salvar Manutenção</button>
+                <a href="/manutencoes" role="button" class="btn btn-secondary">❌ Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleTipoManutencao() {
+        const tipo = document.getElementById('tipo').value;
+        const lojaSelect = document.getElementById('loja_select');
+        const veiculoSelect = document.getElementById('veiculo_select');
+        
+        if (tipo === 'loja') {
+            lojaSelect.style.display = 'block';
+            veiculoSelect.style.display = 'none';
+            document.getElementById('loja_id').required = true;
+            document.getElementById('veiculo_id').required = false;
+        } else if (tipo === 'veiculo') {
+            lojaSelect.style.display = 'none';
+            veiculoSelect.style.display = 'block';
+            document.getElementById('loja_id').required = false;
+            document.getElementById('veiculo_id').required = true;
+        } else {
+            lojaSelect.style.display = 'none';
+            veiculoSelect.style.display = 'none';
+            document.getElementById('loja_id').required = false;
+            document.getElementById('veiculo_id').required = false;
+        }
+    }
+    
+    function previewImages() {
+        const files = document.getElementById('fotos').files;
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        
+        previewContainer.innerHTML = '';
+        
+        if (files.length > 0) {
+            imagePreview.style.display = 'block';
+            
+            Array.from(files).forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    // Verificar tamanho do arquivo (16MB = 16 * 1024 * 1024 bytes)
+                    if (file.size > 16 * 1024 * 1024) {
+                        alert(`Arquivo ${file.name} é muito grande. Tamanho máximo permitido: 16MB`);
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'photo-item';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview ${index + 1}">
+                            <div style="padding: 0.5rem; text-align: center; font-size: 0.8rem; color: #1f2937; font-weight: 600;">
+                                ${file.name}
+                                <br><small style="color: #6b7280;">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                            </div>
+                        `;
+                        previewContainer.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert(`Arquivo ${file.name} não é uma imagem válida.`);
+                }
+            });
+        } else {
+            imagePreview.style.display = 'none';
+        }
+    }
+    
+    // Tornar a área de upload clicável
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('fotos');
+        const uploadArea = fileInput.nextElementSibling;
+        
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '#e0f2fe';
+            uploadArea.style.borderColor = '#1e40af';
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '#f8f9fa';
+            uploadArea.style.borderColor = '#3b82f6';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '#f8f9fa';
+            uploadArea.style.borderColor = '#3b82f6';
+            
+            const files = e.dataTransfer.files;
+            fileInput.files = files;
+            previewImages();
+        });
+    });
+    
+    // Inicializar baseado nos parâmetros da URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('loja_id') || urlParams.get('veiculo_id')) {
+            toggleTipoManutencao();
+        }
+        
+        // Definir data atual como padrão
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('data_manutencao').value = today;
+    });
+</script>
+{% endblock %}

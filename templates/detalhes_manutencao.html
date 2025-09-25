@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}{{ manutencao.titulo }} - Detalhes da Manutenção{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>🔧 {{ manutencao.titulo }}</h3>
+    </div>
+    <div class="card-body">
+        <div class="grid">
+            <div>
+                <h4>Informações da Manutenção</h4>
+                <p><strong>📅 Data:</strong> {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</p>
+                <p><strong>💰 Preço Total:</strong> <span class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</span></p>
+                <p><strong>📝 Tipo:</strong> 
+                    {% if manutencao.tipo == 'loja' %}
+                        🏪 Loja
+                    {% else %}
+                        🚗 Veículo
+                    {% endif %}
+                </p>
+                
+                {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                    <p><strong>🏪 Loja:</strong> 
+                        <a href="/lojas/{{ manutencao.loja.id }}">{{ manutencao.loja.nome }}</a>
+                    </p>
+                {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                    <p><strong>🚗 Veículo:</strong> 
+                        <a href="/veiculos/{{ manutencao.veiculo.id }}">{{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}</a>
+                    </p>
+                {% endif %}
+            </div>
+            <div>
+                <h4>Detalhes</h4>
+                <p><strong>📅 Registrado em:</strong> {{ manutencao.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</p>
+                {% if manutencao.fotos %}
+                    <p><strong>📷 Fotos:</strong> {{ manutencao.fotos|length }} anexada(s)</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if manutencao.descricao %}
+            <div style="margin-top: 1rem;">
+                <h4>Descrição</h4>
+                <p style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-color);">
+                    {{ manutencao.descricao|replace('\n', '<br>')|safe }}
+                </p>
+            </div>
+        {% endif %}
+        
+        <div style="margin-top: 1rem;">
+            <a href="/manutencoes" role="button" class="btn btn-secondary">← Voltar para Manutenções</a>
+            {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                <a href="/lojas/{{ manutencao.loja.id }}" role="button" class="btn btn-secondary">🏪 Ver Loja</a>
+            {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                <a href="/veiculos/{{ manutencao.veiculo.id }}" role="button" class="btn btn-secondary">🚗 Ver Veículo</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if manutencao.fotos %}
+<div class="card">
+    <div class="card-header">
+        <h3>📷 Fotos da Manutenção</h3>
+    </div>
+    <div class="card-body">
+        <div class="photo-gallery">
+            {% for foto in manutencao.fotos %}
+                <div class="photo-item">
+                    <img src="/uploads/{{ foto.nome_arquivo }}" 
+                         alt="Foto da manutenção {{ loop.index }}" 
+                         onclick="openImageModal('/uploads/{{ foto.nome_arquivo }}')"
+                         style="cursor: pointer;">
+                    <div style="padding: 0.5rem; text-align: center; font-size: 0.8rem; color: #1f2937; font-weight: 600;">
+                        {{ foto.data_upload.strftime('%d/%m/%Y %H:%M') }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal para visualizar imagem em tamanho maior -->
+<div id="imageModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);">
+    <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+        <img id="modalImage" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+        <button onclick="closeImageModal()" style="position: absolute; top: 20px; right: 35px; color: white; font-size: 40px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openImageModal(imageSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.style.display = 'block';
+        modalImg.src = imageSrc;
+    }
+    
+    function closeImageModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+    
+    // Fechar modal clicando fora da imagem
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+    
+    // Fechar modal com tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+{% endblock %}
