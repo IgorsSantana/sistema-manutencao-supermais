@@ -1,0 +1,19 @@
+# Configuração PostgreSQL Render - Sistema de Manutenção
+# Guarde estes dados em local seguro!
+
+Hostname: dpg-d3b930buibrs73f9qbdg-a
+Port: 5432
+Database: sistema_manutencao_db
+Username: sistema_manutencao_db_user
+Password: w3kX5gECP59VVXpYttraO8SGPScSgC8i
+
+# URLs para configuração:
+Internal Database URL: postgresql://sistema_manutencao_db_user:w3kX5gECP59VVXpYttraO8SGPScSgC8i@dpg-d3b930buibrs73f9qbdg-a/sistema_manutencao_db
+
+External Database URL: postgresql://sistema_manutencao_db_user:w3kX5gECP59VVXpYttraO8SGPScSgC8i@dpg-d3b930buibrs73f9qbdg-a.oregon-postgres.render.com/sistema_manutencao_db
+
+# IMPORTANTE: Use a EXTERNAL URL para aplicações externas ao Render
+DATABASE_URL=postgresql://sistema_manutencao_db_user:w3kX5gECP59VVXpYttraO8SGPScSgC8i@dpg-d3b930buibrs73f9qbdg-a.oregon-postgres.render.com/sistema_manutencao_db
+
+# PSQL Command para conexão direta:
+PGPASSWORD=w3kX5gECP59VVXpYttraO8SGPScSgC8i psql -h dpg-d3b930buibrs73f9qbdg-a.oregon-postgres.render.com -U sistema_manutencao_db_user sistema_manutencao_db

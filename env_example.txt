@@ -1,0 +1,24 @@
+# Configuração do Sistema de Manutenção - Variáveis de Ambiente
+
+# Copie este arquivo como '.env' e configure as variáveis abaixo
+
+# Configurações do Banco de Dados
+# SQLite (desenvolvimento)
+DEV_DATABASE_URL=sqlite:///database.db
+
+# PostgreSQL (produção - exemplo)
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/manutencao_supermais
+
+# MySQL (produção - exemplo)
+DATABASE_URL=mysql://usuario:senha@localhost:3306/manutencao_supermais
+
+# Configurações da Aplicação
+SECRET_KEY=seu_secret_key_aqui
+FLASK_ENV=development
+
+# Configurações do Banco (opcionais)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=manutencao_supermais
+DB_USER=usuario_banco
+DB_PASSWORD=senha_banco

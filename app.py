@@ -6,19 +6,52 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Configuração simples direta
+USE_ADVANCED_CONFIG = False
+
 # --- Configuração Inicial ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+
+# Configuração do banco de dados
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # PostgreSQL (Render Production)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    print("🌐 Conectando ao PostgreSQL (Render)...")
+else:
+    # SQLite (Desenvolvimento Local)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+    print("💾 Usando SQLite (Modo Desenvolvimento)...")
+
+# Configurações gerais
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'santo_antonio_super_mais_2024'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'santo_antonio_super_mais_2024')
 app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Criar pasta de uploads se não existir
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Inicializar banco de dados
 db = SQLAlchemy(app)
+
+# --- Funções Auxiliares ---
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def register_routes(app):
+    """Registrar todas as rotas na aplicação"""
+    # Todas as rotas serão registradas aqui
+    pass
 
 # --- Modelos (Tabelas do Banco de Dados) ---
 class Loja(db.Model):
@@ -80,11 +113,6 @@ class FotoManutencao(db.Model):
     def __repr__(self):
         return f'<FotoManutencao {self.nome_arquivo}>'
 
-
-# --- Funções Auxiliares ---
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # --- Rotas da Aplicação ---
 @app.route('/')
@@ -282,10 +310,65 @@ def create_tables():
     with app.app_context():
         db.create_all()
 
-# Inicializar banco de dados quando o módulo for importado
-create_tables()
+def init_database_tables():
+    """Inicializa as tabelas do banco apenas se necessário"""
+    try:
+        with app.app_context():
+            print("🔧 Verificando estrutura do banco...")
+            
+            # Sempre criar as tabelas no Render com PostgreSQL
+            if DATABASE_URL:
+                print("📊 PostgreSQL detectado - criando tabelas...")
+                db.create_all()
+                print("✅ Schema PostgreSQL configurado!")
+            else:
+                # SQLite local - verificar se já existe
+                try:
+                    # Tentativa de verificar se a tabela loja existe
+                    db.session.execute("SELECT 1 FROM loja LIMIT 1")
+                    print("ℹ️  Banco SQLite já configurado")
+                except Exception:
+                    print("📝 Criando schema SQLite...")
+                    db.create_all()
+                    print("✅ Schema SQLite criado!")
+            
+    except Exception as e:
+        print(f"⚠️  Erro ao configurar banco: {e}")
+        print("🔧 Criando tabelas de qualquer forma...")
+        try:
+            with app.app_context():
+                db.create_all()
+                print("✅ Tabelas criadas com sucesso!")
+        except Exception as inner_e:
+            print(f"❌ Erro crítico: {inner_e}")
 
 if __name__ == '__main__':
-    # Apenas para desenvolvimento local
+    print("🚀 Sistema de Manutenção - Supermercado")
+    print("🔧 Configurando banco de dados...")
+    
+    # Detectar ambiente
+    if DATABASE_URL:
+        print("🌐 Ambiente: PRODUÇÃO (Render + PostgreSQL)")
+    else:
+        print("💾 Ambiente: DESENVOLVIMENTO (SQLite Local)")
+    
+    # Inicializar banco de dados
+    init_database_tables()
+    
+    # Configurar porta
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    
+    print(f"✅ Sistema iniciado na porta {port}")
+    
+    # Diferentes URLs dependendo do ambiente
+    if os.environ.get('RENDER'):
+        app_url = "https://sistema-manutencao-supermais.onrender.com"
+        print(f"🌐 Render URL: {app_url}")
+    else:
+        app_url = f"http://localhost:{port}"
+        print(f"🌐 Local URL: {app_url}")
+    
+    print(f"🔗 Acesse: {app_url}")
+    print("=" * 60)
+    
+    app.run(host='0.0.0.0', port=port, debug=not DATABASE_URL)

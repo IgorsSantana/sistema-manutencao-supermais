@@ -1,13 +1,28 @@
 services:
+  # Web Service (Applicação Principal)
   - type: web
     name: sistema-manutencao-supermais
     env: python
     plan: free
     repo: https://github.com/[SEU_USUARIO]/sistema-manutencao-supermais
     region: oregon
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt
+      python render_database_setup.py
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: FLASK_ENV
+        value: production
     healthCheckPath: /
+
+  # Database Service (PostgreSQL)
+  - type: pserv
+    name: sistema-manutencao-db
+    env: postgresql
+    plan: free
+    region: oregon
+    envVars:
+      - key: DATABASE_URL
+        sync: false
