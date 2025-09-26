@@ -77,6 +77,7 @@
             --color-text-light: var(--gray-400);
             --color-border: var(--gray-200);
             --color-border-light: var(--gray-100);
+            --color-warning: var(--warning-500);
             
             /* Enhanced Typography */
             --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -1181,6 +1182,46 @@
             justify-content: center;
         }
 
+        .nav-item.warning {
+            border: 2px solid var(--color-warning);
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--color-warning);
+        }
+
+        .nav-item.warning:hover {
+            background: var(--color-warning);
+            color: white;
+            transform: translateX(6px);
+        }
+
+        .nav-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .nav-user-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--primary-200);
+            margin-bottom: var(--space-2);
+        }
+
+        .nav-user-icon {
+            font-size: var(--font-size-lg);
+        }
+
+        .nav-user-badge small {
+            color: var(--color-text-muted);
+            font-size: var(--font-size-xs);
+            display: block;
+            margin-top: 2px;
+        }
+
         /* Enhanced Desktop Navigation */
         .nav-desktop {
             display: none;
@@ -1744,6 +1785,29 @@
                     <span>Novo Veículo</span>
                 </a>
             </div>
+            
+            {% if session.user_id %}
+            <div class="nav-section">
+                <div class="nav-section-title">Usuário</div>
+                <div class="nav-user-info">
+                    <div class="nav-user-badge">
+                        <span class="nav-user-icon">👤</span>
+                        <div>
+                            <strong>{{ session.username }}</strong>
+                            <small>{% if session.user_type == 'analista' %}Analista{% else %}Usuário{% endif %}</small>
+                        </div>
+                    </div>
+                    <a href="/usuario/cadastro" class="nav-item">
+                        <span class="nav-item-icon">👤</span>
+                        <span>Cadastrar Usuário</span>
+                    </a>
+                    <a href="/logout" class="nav-item warning">
+                        <span class="nav-item-icon">🚪</span>
+                        <span>Sair</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </nav>
 
