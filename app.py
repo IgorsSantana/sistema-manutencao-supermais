@@ -79,7 +79,7 @@ def create_default_users():
         
         if existing_users > 0:
             users_list = Usuario.query.all()
-            print(f"📋 Usuários no sistema:")
+            print("📋 Usuários no sistema:")
             for u in users_list:
                 print(f"   - {u.username} ({u.tipo}) - Ativo: {u.ativo}")
             return
@@ -480,7 +480,14 @@ def login():
             db.session.commit()
             
             flash(f'Bem-vindo, {user.username}!', 'success')
-            return redirect(url_for('homepage'))
+            print("🔄 Redirecionando para homepage...")
+            
+            # Testar redirecionamento passo a passo
+            try:
+                return redirect(url_for('homepage'))
+            except Exception as redirect_error:
+                print(f"❌ Erro no redirecionamento: {redirect_error}")
+                return redirect('/')  # Fallback: redirect direto
         else:
             print(f"❌ Login falhou para: {username}")
             flash('Usuário ou senha incorretos.', 'error')
