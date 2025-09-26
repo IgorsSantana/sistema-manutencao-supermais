@@ -121,9 +121,18 @@ def create_default_users():
         traceback.print_exc()
         db.session.rollback()
 
-# Executar na inicialização do módulo quando DATABASE_URL está presente
+# Executar na inicialização do módulo sempre
+# Se não há DATABASE_URL (desenvolvimento local), roda na primeira startup
 if os.environ.get('DATABASE_URL'):
+    # Produção - Render
     ensure_tables_created()
+else:
+    # Desenvolvimento local ou primeira vez
+    try:
+        print("🔧 Executando setup inicial (desenvolvimento local)...")
+        ensure_tables_created()
+    except Exception as e:
+        print(f"⚠️ Erro no setup inicial (ok se é primeira vez): {e}")
 
 # Decorator para garantir que as tabelas existam em todas as rotas
 def ensure_db_tables(func):
@@ -133,6 +142,10 @@ def ensure_db_tables(func):
             with app.app_context():
                 # Verificar se as tabelas existem fazendo uma query simples
                 db.session.execute("SELECT 1 FROM loja LIMIT 1")
+                # Garantir que temos usuários padrão
+                if Usuario.query.count() == 0:
+                    print("🔧 Tabelas OK, mas não há usuários. Criando agora...")
+                    create_default_users()
         except Exception:
             # Se não existem, criar agora
             try:
@@ -140,6 +153,8 @@ def ensure_db_tables(func):
                     db.create_all()
                     db.session.commit()
                     print("🔧 Tabelas criadas durante requisição")
+                    # Criar usuários padrão também
+                    create_default_users()
             except Exception as e:
                 print(f"⚠️  Erro criando tabelas durante request: {e}")
         
@@ -507,6 +522,18 @@ def logout():
     session.clear()
     flash('Logout realizado com sucesso.', 'info')
     return redirect(url_for('login'))
+
+@app.route('/setup-admin')
+def setup_admin():
+    """Rota temporária para forçar criação de usuários admin"""
+    try:
+        with app.app_context():
+            create_default_users()
+            usuarios = Usuario.query.all()
+            flash('Usuários administrativos criados com sucesso!', 'success')
+            return f'Setup completo! Usuários criados: {[u.username for u in usuarios]}'
+    except Exception as e:
+        return f'Erro no setup: {str(e)}'
 
 @app.route('/usuario/cadastro', methods=['GET', 'POST'])
 @login_required
