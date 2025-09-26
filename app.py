@@ -245,9 +245,16 @@ class Usuario(db.Model):
 def login_required(func):
     """Decorator que verifica se o usuário está logado"""
     def wrapper(*args, **kwargs):
-        if not session.get('user_id'):
+        session_user_id = session.get('user_id')
+        session_username = session.get('username')
+        print(f"🔒 Decorator login_required - User ID: {session_user_id}, Username: {session_username}")
+        
+        if not session_user_id:
+            print("❌ Não logado: redirecionando para login")
             flash('Você precisa fazer login para acessar essa página.', 'warning')
             return redirect(url_for('login'))
+        
+        print(f"✅ Usuário logado - ID: {session_user_id}")
         return func(*args, **kwargs)
     
     wrapper.__name__ = func.__name__
