@@ -43,96 +43,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Inicializar banco de dados
 db = SQLAlchemy(app)
 
-# Garantir que as tabelas sejam criadas na inicialização
-def ensure_tables_created():
-    """Força criação das tabelas no startup"""
-    try:
-        with app.app_context():
-            print("🔧 Garantindo criação das tabelas no startup...")
-            db.create_all()
-            db.session.commit()  # Garantir que a transação seja commitada
-            print("✅ Todas as tabelas criadas com sucesso!")
-            
-            # Criar usuários padrão
-            create_default_users()
-            
-    except Exception as e:
-        print(f"⚠️  Erro garantindo tabelas: {e}")
-        db.session.rollback()
-        
-        # Tentar novamente
-        try:
-            with app.app_context():
-                db.create_all()
-                db.session.commit()
-                print("✅ Tabelas criadas na segunda tentativa!")
-                create_default_users()
-        except Exception as e2:
-            print(f"❌ Erro crítico criando tabelas: {e2}")
-
-def create_default_users():
-    """Cria usuários padrão se não existirem"""
-    try:
-        # Verificar se já existem usuários
-        existing_users = Usuario.query.count()
-        print(f"👥 Verificando usuários existentes: {existing_users}")
-        
-        if existing_users > 0:
-            users_list = Usuario.query.all()
-            print("📋 Usuários no sistema:")
-            for u in users_list:
-                print(f"   - {u.username} ({u.tipo}) - Ativo: {u.ativo}")
-            return
-        
-        print("🆕 Criando usuários padrão...")
-        
-        # Criar usuário administrador
-        admin_user = Usuario(
-            username='admin',
-            password='admin123',
-            tipo='analista'
-        )
-        
-        # Criar usuário comum de teste
-        test_user = Usuario(
-            username='usuario',
-            password='123456',
-            tipo='usuario'
-        )
-        
-        db.session.add(admin_user)
-        db.session.add(test_user)
-        db.session.commit()
-        
-        # Confirmar que foram criados
-        final_count = Usuario.query.count()
-        print(f"✅ Usuários padrão criados! Total: {final_count}")
-        print("   📧 Admin: admin / admin123")
-        print("   📧 Usuário: usuario / 123456")
-        
-        # Verificar na mão para garantir que funciona
-        test_admin = Usuario.query.filter_by(username='admin').first()
-        if test_admin:
-            print(f"🔐 Teste admin: IDF={test_admin.id}, Ativo={test_admin.ativo}, Senha={test_admin.verificar_senha('admin123')}")
-        
-    except Exception as e:
-        print(f"⚠️  Erro criando usuários padrão: {e}")
-        import traceback
-        traceback.print_exc()
-        db.session.rollback()
-
-# Executar na inicialização do módulo sempre
-# Se não há DATABASE_URL (desenvolvimento local), roda na primeira startup
-if os.environ.get('DATABASE_URL'):
-    # Produção - Render
-    ensure_tables_created()
-else:
-    # Desenvolvimento local ou primeira vez
-    try:
-        print("🔧 Executando setup inicial (desenvolvimento local)...")
-        ensure_tables_created()
-    except Exception as e:
-        print(f"⚠️ Erro no setup inicial (ok se é primeira vez): {e}")
+# Inicialização das tabelas será feita após definição das classes
 
 # Decorator para garantir que as tabelas existam em todas as rotas
 def ensure_db_tables(func):
@@ -145,7 +56,7 @@ def ensure_db_tables(func):
                 # Garantir que temos usuários padrão
                 if Usuario.query.count() == 0:
                     print("🔧 Tabelas OK, mas não há usuários. Criando agora...")
-                    create_default_users()
+                    create_default_users_if_needed()
         except Exception:
             # Se não existem, criar agora
             try:
@@ -154,7 +65,7 @@ def ensure_db_tables(func):
                     db.session.commit()
                     print("🔧 Tabelas criadas durante requisição")
                     # Criar usuários padrão também
-                    create_default_users()
+                    create_default_users_if_needed()
             except Exception as e:
                 print(f"⚠️  Erro criando tabelas durante request: {e}")
         
@@ -255,6 +166,99 @@ class Usuario(db.Model):
     def is_analista(self):
         return self.tipo == 'analista'
 
+
+# Função para criar usuários quando necessário
+def create_default_users_if_needed():
+    """Cria usuários padrão se não existirem"""
+    try:
+        # Verificar se já existem usuários
+        existing_users = Usuario.query.count()
+        print(f"👥 Verificando usuários existentes: {existing_users}")
+        
+        if existing_users > 0:
+            users_list = Usuario.query.all()
+            print("📋 Usuários no sistema:")
+            for u in users_list:
+                print(f"   - {u.username} ({u.tipo}) - Ativo: {u.ativo}")
+            return
+        
+        print("🆕 Criando usuários padrão...")
+        
+        # Criar usuário administrador
+        admin_user = Usuario(
+            username='admin',
+            password='admin123',
+            tipo='analista'
+        )
+        
+        # Criar usuário comum de teste
+        test_user = Usuario(
+            username='usuario',
+            password='123456',
+            tipo='usuario'
+        )
+        
+        db.session.add(admin_user)
+        db.session.add(test_user)
+        db.session.commit()
+        
+        # Confirmar que foram criados
+        final_count = Usuario.query.count()
+        print(f"✅ Usuários padrão criados! Total: {final_count}")
+        print("   📧 Admin: admin / admin123")
+        print("   📧 Usuário: usuario / 123456")
+        
+        # Verificar na mão para garantir que funciona
+        test_admin = Usuario.query.filter_by(username='admin').first()
+        if test_admin:
+            print(f"🔐 Teste admin: IDF={test_admin.id}, Ativo={test_admin.ativo}, Senha={test_admin.verificar_senha('admin123')}")
+        
+    except Exception as e:
+        print(f"⚠️  Erro criando usuários padrão: {e}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+
+# Função para garantir criação das tabelas após todas as classes estarem definidas
+def ensure_tables_created():
+    """Força criação das tabelas no startup"""
+    try:
+        with app.app_context():
+            print("🔧 Garantindo criação das tabelas no startup...")
+            db.create_all()
+            db.session.commit()
+            print("✅ Todas as tabelas criadas com sucesso!")
+            
+            # Após criar tabelas, agora é seguro criar usuários
+            try:
+                create_default_users_if_needed()
+            except Exception as e2:
+                print(f"⚠️  Erro criando usuários padrão: {e2}")
+            
+    except Exception as e:
+        print(f"⚠️  Erro garantindo tabelas: {e}")
+        db.session.rollback()
+        try:
+            with app.app_context():
+                db.create_all()
+                db.session.commit()
+                print("✅ Tabelas criadas na segunda tentativa!")
+                create_default_users_if_needed()
+        except Exception as e2:
+            print(f"❌ Erro crítico criando tabelas: {e2}")
+
+# Executar na inicialização do módulo sempre
+# Se não há DATABASE_URL (desenvolvimento local), roda na primeira startup
+if os.environ.get('DATABASE_URL'):
+    # Produção - Render
+    ensure_tables_created()
+else:
+    # Desenvolvimento local ou primeira vez
+    try:
+        print("🔧 Executando setup inicial (desenvolvimento local)...")
+        ensure_tables_created()
+    except Exception as e:
+        print(f"⚠️ Erro no setup inicial (ok se é primeira vez): {e}")
 
 # Decorator para verificar login
 def login_required(func):
@@ -528,7 +532,7 @@ def setup_admin():
     """Rota temporária para forçar criação de usuários admin"""
     try:
         with app.app_context():
-            create_default_users()
+            create_default_users_if_needed()
             usuarios = Usuario.query.all()
             flash('Usuários administrativos criados com sucesso!', 'success')
             return f'Setup completo! Usuários criados: {[u.username for u in usuarios]}'
