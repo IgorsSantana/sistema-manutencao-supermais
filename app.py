@@ -43,6 +43,21 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Inicializar banco de dados
 db = SQLAlchemy(app)
 
+# Garantir que as tabelas sejam criadas na inicialização
+def ensure_tables_created():
+    """Força criação das tabelas no startup"""
+    try:
+        with app.app_context():
+            print("🔧 Garantindo criação das tabelas no startup...")
+            db.create_all()
+            print("✅ Todas as tabelas criadas com sucesso!")
+    except Exception as e:
+        print(f"⚠️  Erro garantindo tabelas: {e}")
+
+# Executar na inicialização do módulo quando DATABASE_URL está presente
+if os.environ.get('DATABASE_URL'):
+    ensure_tables_created()
+
 # --- Funções Auxiliares ---
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -312,35 +327,31 @@ def create_tables():
 
 def init_database_tables():
     """Inicializa as tabelas do banco apenas se necessário"""
-    try:
-        with app.app_context():
-            print("🔧 Verificando estrutura do banco...")
-            
-            # Sempre criar as tabelas no Render com PostgreSQL
-            if DATABASE_URL:
-                print("📊 PostgreSQL detectado - criando tabelas...")
+    with app.app_context():
+        print("🔧 Verificando estrutura do banco...")
+        
+        if DATABASE_URL:
+            print("📊 PostgreSQL detectado - criando tabelas...")
+            try:
                 db.create_all()
                 print("✅ Schema PostgreSQL configurado!")
-            else:
-                # SQLite local - verificar se já existe
-                try:
-                    # Tentativa de verificar se a tabela loja existe
-                    db.session.execute("SELECT 1 FROM loja LIMIT 1")
-                    print("ℹ️  Banco SQLite já configurado")
-                except Exception:
-                    print("📝 Criando schema SQLite...")
-                    db.create_all()
-                    print("✅ Schema SQLite criado!")
-            
-    except Exception as e:
-        print(f"⚠️  Erro ao configurar banco: {e}")
-        print("🔧 Criando tabelas de qualquer forma...")
-        try:
-            with app.app_context():
+                return True
+            except Exception as e:
+                print(f"⚠️  Erro ao criar tabelas PostgreSQL: {e}")
+                # Tentar novamente
+                db.session.rollback()
                 db.create_all()
-                print("✅ Tabelas criadas com sucesso!")
-        except Exception as inner_e:
-            print(f"❌ Erro crítico: {inner_e}")
+                print("✅ Schema PostgreSQL configurado na segunda tentativa!")
+                return True
+        else:
+            print("💾 SQLite detectado - criando/verificando tabelas...")
+            try:
+                db.create_all()
+                print("✅ Schema SQLite configurado!")
+                return True
+            except Exception as e:
+                print(f"❌ Erro crítico SQLite: {e}")
+                return False
 
 if __name__ == '__main__':
     print("🚀 Sistema de Manutenção - Supermercado")
