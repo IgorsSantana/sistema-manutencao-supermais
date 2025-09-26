@@ -363,25 +363,154 @@
                 font-size: 0.8rem;
             }
 
-            /* Navegação mobile melhorada */
-            .nav-mobile ul {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.3rem;
-                padding: 0.5rem;
-            }
+        /* Navegação mobile profissional */
+        .nav-mobile {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 -4px 25px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 0.5rem 1rem 1rem 1rem;
+            margin: 0;
+        }
 
-            .nav-mobile li {
-                flex: 1;
-                min-width: calc(50% - 0.15rem);
-            }
+        .nav-mobile ul {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
 
-            .nav-mobile .btn {
-                width: 100%;
-                text-align: center;
-                padding: 0.6rem 0.4rem;
-                font-size: 0.8rem;
-            }
+        .nav-mobile li {
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-mobile .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0.3rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            min-height: 60px;
+            position: relative;
+            background: transparent;
+            border: none;
+        }
+
+        .nav-mobile .nav-item:hover,
+        .nav-mobile .nav-item:focus,
+        .nav-mobile .nav-item.active {
+            color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-mobile .nav-icon {
+            font-size: 1.4rem;
+            margin-bottom: 0.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-mobile .nav-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .nav-mobile .nav-badge {
+            position: absolute;
+            top: 0.2rem;
+            right: 0.2rem;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .nav-mobile .nav-badge.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Navegação secundária mobile */
+        .nav-mobile-secondary {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-mobile-secondary .mobile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-mobile-secondary h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .nav-mobile-secondary .mobile-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .nav-mobile-secondary .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-mobile-secondary .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-mobile-secondary .btn-icon:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
 
             /* Cards de lojas e veículos otimizados */
             .loja-card, .veiculo-card {
@@ -538,14 +667,60 @@
     </div>
 
     <main class="container">
-        <!-- Navegação Mobile -->
+        <!-- Header Mobile Professional -->
+        <div class="nav-mobile-secondary">
+            <div class="mobile-header">
+                <div>
+                    <h1>Sistema de Manutenção</h1>
+                    <p class="mobile-subtitle">Santo Antonio Super Mais</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" onclick="toggleNotifications()" title="Notificações">
+                        🔔
+                    </button>
+                    <button class="btn-icon" onclick="toggleMenu()" title="Menu">
+                        ☰
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Professional -->
         <nav class="nav-mobile">
             <ul>
-                <li><a href="/" role="button" class="btn btn-secondary">🏠 Início</a></li>
-                <li><a href="/lojas" role="button" class="btn btn-secondary">🏪 Lojas</a></li>
-                <li><a href="/veiculos" role="button" class="btn btn-secondary">🚗 Frota</a></li>
-                <li><a href="/manutencoes" role="button" class="btn btn-secondary">🔧 Manutenções</a></li>
-                <li><a href="/manutencoes/cadastrar" role="button" class="btn btn-primary">➕ Nova</a></li>
+                <li>
+                    <a href="/" class="nav-item" data-page="dashboard">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-label">Início</span>
+                        <span class="nav-badge">5</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/lojas" class="nav-item" data-page="lojas">
+                        <span class="nav-icon">🏪</span>
+                        <span class="nav-label">Lojas</span>
+                        <span class="nav-badge">2</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/veiculos" class="nav-item" data-page="veiculos">
+                        <span class="nav-icon">🚗</span>
+                        <span class="nav-label">Frota</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/manutencoes" class="nav-item" data-page="manutencoes">
+                        <span class="nav-icon">🔧</span>
+                        <span class="nav-label">Serviços</span>
+                        <span class="nav-badge">3</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/manutencoes/cadastrar" class="nav-item" data-page="nova">
+                        <span class="nav-icon">➕</span>
+                        <span class="nav-label">Nova</span>
+                    </a>
+                </li>
             </ul>
         </nav>
 
@@ -588,5 +763,99 @@
     </footer>
 
     {% block extra_js %}{% endblock %}
+
+    <script>
+        // Navegação mobile profissional
+        document.addEventListener('DOMContentLoaded', function() {
+            // Marcar página ativa
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href === currentPath || (currentPath.startsWith('/lojas') && href === '/lojas') || 
+                    (currentPath.startsWith('/veiculos') && href === '/veiculos') || 
+                    (currentPath.startsWith('/manutencoes') && href === '/manutencoes')) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Scroll suave para conteúdo
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.marginTop = '70px';
+                container.style.marginBottom = '90px';
+                container.style.minHeight = 'calc(100vh - 160px)';
+            }
+
+            // Animações de navegação
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Remover active de todos
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    // Adicionar active ao clicado
+                    this.classList.add('active');
+                    
+                    // Feedback visual
+                    this.style.transform = 'translateY(-2px) scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'translateY(-2px) scale(1)';
+                    }, 100);
+                });
+            });
+
+            // Badge notifications (simulado)
+            const badges = document.querySelectorAll('.nav-badge');
+            badges.forEach(badge => {
+                if (badge.textContent && !isNaN(badge.textContent)) {
+                    badge.classList.add('show');
+                }
+            });
+        });
+
+        // Funções do header mobile
+        function toggleNotifications() {
+            const notifications = ['Manutenção pendente na Loja Centro', 'Veículo ABC-1234 precisa de revisão'];
+            if (notifications.length === 0) {
+                alert('Nenhuma notificação');
+            } else {
+                alert('Notificações:\n' + notifications.join('\n'));
+            }
+        }
+
+        function toggleMenu() {
+            // Menu de contexto rápido
+            const menuOptions = [
+                '📊 Dashboard',
+                '🏪 Gerenciar Lojas', 
+                '🚗 Gerenciar Frota',
+                '🔧 Gerenciar Manutenções',
+                '📷 Ver Fotos',
+                '💰 Relatórios',
+                '⚙️ Configurações'
+            ];
+            
+            const choice = confirm('Menu Rápido:\n\n' + menuOptions.join('\n') + '\n\nClique OK para ir para Dashboard');
+            if (choice) {
+                window.location.href = '/';
+            }
+        }
+
+        // Melhorar UX mobile
+        document.addEventListener('touchstart', function() {}, {passive: true});
+        
+        // Feedback háptico simulado
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('touchstart', function() {
+                this.style.background = 'rgba(59, 130, 246, 0.2)';
+            });
+            
+            item.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.background = 'transparent';
+                }, 150);
+            });
+        });
+    </script>
 </body>
 </html>
