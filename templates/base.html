@@ -216,18 +216,44 @@
                 color: white;
             }
 
+            .mobile-nav-brand-container {
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+
             .mobile-nav-brand {
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
+                gap: 0.8rem;
                 text-decoration: none;
                 color: white;
-                font-weight: 600;
-                font-size: 1.1rem;
+                width: 100%;
             }
 
             .mobile-nav-brand .nav-icon {
-                font-size: 1.3rem;
+                font-size: 1.5rem;
+                flex-shrink: 0;
+            }
+
+            .brand-text {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                line-height: 1.2;
+            }
+
+            .brand-title {
+                font-weight: 700;
+                font-size: 1.1rem;
+                color: white;
+                margin-bottom: 0.2rem;
+            }
+
+            .brand-subtitle {
+                font-size: 0.8rem;
+                color: rgba(255, 255, 255, 0.9);
+                font-weight: 400;
             }
 
             .mobile-nav-toggle {
@@ -351,19 +377,9 @@
                 display: none;
             }
 
-            .header {
-                padding: 0.8rem 0;
-                margin-bottom: 1rem;
-            }
-
-            .header h1 {
-                font-size: 1.4rem;
-                margin-bottom: 0.3rem;
-            }
-
-            .header h2 {
-                font-size: 0.85rem;
-                opacity: 0.9;
+            /* Header agora é parte do nav */
+            .nav-mobile {
+                margin-bottom: 1.5rem;
             }
 
             .container {
@@ -641,8 +657,12 @@
                     padding: 0.8rem;
                 }
 
-                .mobile-nav-brand {
+                .brand-title {
                     font-size: 1rem;
+                }
+
+                .brand-subtitle {
+                    font-size: 0.7rem;
                 }
 
                 .mobile-nav-item {
@@ -691,8 +711,12 @@
                 padding: 1.2rem;
             }
 
-            .mobile-nav-brand {
+            .brand-title {
                 font-size: 1.2rem;
+            }
+
+            .brand-subtitle {
+                font-size: 0.85rem;
             }
 
             .mobile-nav-item {
@@ -718,8 +742,12 @@
                 padding: 1rem 1.3rem;
             }
 
-            .mobile-nav-brand {
+            .brand-title {
                 font-size: 1.05rem;
+            }
+
+            .brand-subtitle {
+                font-size: 0.75rem;
             }
         }
 
@@ -742,12 +770,6 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="header">
-        <div class="container">
-            <h1>{% block header_title %}Sistema de Manutenção{% endblock %}</h1>
-            <h2>Supermercado Santo Antonio Super Mais</h2>
-        </div>
-    </div>
 
     <main class="container">
         <!-- Navegação Mobile Profissional -->
@@ -755,10 +777,15 @@
             <!-- Menu Principal Mobile -->
             <div class="mobile-nav-container">
                 <div class="mobile-nav-header">
-                    <a href="/" class="mobile-nav-brand">
-                        <span class="nav-icon">🏠</span>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
+                    <div class="mobile-nav-brand-container">
+                        <a href="/" class="mobile-nav-brand">
+                            <span class="nav-icon">🏠</span>
+                            <div class="brand-text">
+                                <div class="brand-title">{% block header_title %}Sistema de Manutenção{% endblock %}</div>
+                                <div class="brand-subtitle">Supermercado Santo Antonio Super Mais</div>
+                            </div>
+                        </a>
+                    </div>
                     <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle menu">
                         <span></span>
                         <span></span>
