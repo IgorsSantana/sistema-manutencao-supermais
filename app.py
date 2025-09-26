@@ -74,9 +74,17 @@ def create_default_users():
     """Cria usuários padrão se não existirem"""
     try:
         # Verificar se já existem usuários
-        if Usuario.query.count() > 0:
-            print("👥 Usuários já existem no sistema.")
+        existing_users = Usuario.query.count()
+        print(f"👥 Verificando usuários existentes: {existing_users}")
+        
+        if existing_users > 0:
+            users_list = Usuario.query.all()
+            print(f"📋 Usuários no sistema:")
+            for u in users_list:
+                print(f"   - {u.username} ({u.tipo}) - Ativo: {u.ativo}")
             return
+        
+        print("🆕 Criando usuários padrão...")
         
         # Criar usuário administrador
         admin_user = Usuario(
@@ -96,12 +104,21 @@ def create_default_users():
         db.session.add(test_user)
         db.session.commit()
         
-        print("✅ Usuários padrão criados com sucesso!")
+        # Confirmar que foram criados
+        final_count = Usuario.query.count()
+        print(f"✅ Usuários padrão criados! Total: {final_count}")
         print("   📧 Admin: admin / admin123")
         print("   📧 Usuário: usuario / 123456")
         
+        # Verificar na mão para garantir que funciona
+        test_admin = Usuario.query.filter_by(username='admin').first()
+        if test_admin:
+            print(f"🔐 Teste admin: IDF={test_admin.id}, Ativo={test_admin.ativo}, Senha={test_admin.verificar_senha('admin123')}")
+        
     except Exception as e:
         print(f"⚠️  Erro criando usuários padrão: {e}")
+        import traceback
+        traceback.print_exc()
         db.session.rollback()
 
 # Executar na inicialização do módulo quando DATABASE_URL está presente
@@ -441,14 +458,22 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        print(f"🔐 Tentativa de login: {username} / {password}")
+        
         # Buscar usuário
         user = Usuario.query.filter_by(username=username, ativo=True).first()
+        
+        print(f"🔍 Usuário encontrado: {user}")
+        if user:
+            print(f"🔑 Verificando senha: {user.verificar_senha(password)}")
         
         if user and user.verificar_senha(password):
             # Login bem sucedido
             session['user_id'] = user.id
             session['username'] = user.username
             session['user_type'] = user.tipo
+            
+            print(f"✅ Login bem-sucedido: {user.username} (ID: {user.id})")
             
             # Atualizar último login
             user.ultimo_login = datetime.utcnow()
@@ -457,6 +482,7 @@ def login():
             flash(f'Bem-vindo, {user.username}!', 'success')
             return redirect(url_for('homepage'))
         else:
+            print(f"❌ Login falhou para: {username}")
             flash('Usuário ou senha incorretos.', 'error')
     
     # Se não está logado, mostrar tela de login
