@@ -50,13 +50,48 @@ def ensure_tables_created():
         with app.app_context():
             print("🔧 Garantindo criação das tabelas no startup...")
             db.create_all()
+            db.session.commit()  # Garantir que a transação seja commitada
             print("✅ Todas as tabelas criadas com sucesso!")
     except Exception as e:
         print(f"⚠️  Erro garantindo tabelas: {e}")
+        db.session.rollback()
+        
+        # Tentar novamente
+        try:
+            with app.app_context():
+                db.create_all()
+                db.session.commit()
+                print("✅ Tabelas criadas na segunda tentativa!")
+        except Exception as e2:
+            print(f"❌ Erro crítico criando tabelas: {e2}")
 
 # Executar na inicialização do módulo quando DATABASE_URL está presente
 if os.environ.get('DATABASE_URL'):
     ensure_tables_created()
+
+# Decorator para garantir que as tabelas existam em todas as rotas
+def ensure_db_tables(func):
+    """Decorator que garante que as tabelas existem antes de executar a função"""
+    def wrapper(*args, **kwargs):
+        try:
+            with app.app_context():
+                # Verificar se as tabelas existem fazendo uma query simples
+                db.session.execute("SELECT 1 FROM loja LIMIT 1")
+        except Exception:
+            # Se não existem, criar agora
+            try:
+                with app.app_context():
+                    db.create_all()
+                    db.session.commit()
+                    print("🔧 Tabelas criadas durante requisição")
+            except Exception as e:
+                print(f"⚠️  Erro criando tabelas durante request: {e}")
+        
+        return func(*args, **kwargs)
+    
+    # Manter o nome da função original para Flask routing
+    wrapper.__name__ = func.__name__
+    return wrapper
 
 # --- Funções Auxiliares ---
 def allowed_file(filename):
@@ -131,6 +166,7 @@ class FotoManutencao(db.Model):
 
 # --- Rotas da Aplicação ---
 @app.route('/')
+@ensure_db_tables
 def homepage():
     # Busca todas as lojas e todos os veículos no banco
     lista_de_lojas = Loja.query.all()
@@ -155,6 +191,7 @@ def homepage():
 
 # --- Rotas para Lojas ---
 @app.route('/lojas')
+@ensure_db_tables
 def listar_lojas():
     lojas = Loja.query.all()
     return render_template('lojas.html', lojas=lojas)
@@ -182,6 +219,7 @@ def detalhes_loja(loja_id):
 
 # --- Rotas para Veículos ---
 @app.route('/veiculos')
+@ensure_db_tables
 def listar_veiculos():
     veiculos = Veiculo.query.all()
     return render_template('veiculos.html', veiculos=veiculos)
@@ -212,6 +250,7 @@ def detalhes_veiculo(veiculo_id):
 
 # --- Rotas para Manutenções ---
 @app.route('/manutencoes')
+@ensure_db_tables
 def listar_manutencoes():
     tipo = request.args.get('tipo', 'todas')
     if tipo == 'loja':
@@ -306,6 +345,7 @@ def uploaded_file(filename):
 
 # --- Rota para API de estatísticas ---
 @app.route('/api/estatisticas')
+@ensure_db_tables
 def api_estatisticas():
     total_lojas = Loja.query.count()
     total_veiculos = Veiculo.query.count()
