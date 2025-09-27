@@ -191,26 +191,8 @@ else:
 @app.route('/')
 @ensure_db_tables
 def homepage():
-    # Busca todas as lojas e todos os veículos no banco
-    lista_de_lojas = Loja.query.all()
-    lista_de_veiculos = Veiculo.query.all()
-    
-    # Busca manutenções recentes
-    manutencoes_recentes = Manutencao.query.order_by(Manutencao.data_cadastro.desc()).limit(10).all()
-    
-    # Estatísticas
-    total_lojas = len(lista_de_lojas)
-    total_veiculos = len(lista_de_veiculos)
-    total_manutencoes = Manutencao.query.count()
-    
-    # Envia todas as informações para o template
-    return render_template('index.html', 
-                         lojas=lista_de_lojas, 
-                         veiculos=lista_de_veiculos,
-                         manutencoes_recentes=manutencoes_recentes,
-                         total_lojas=total_lojas,
-                         total_veiculos=total_veiculos,
-                         total_manutencoes=total_manutencoes)
+    # Redirecionar para a página de manutenções como página principal
+    return redirect(url_for('listar_manutencoes'))
 
 # --- Rotas para Lojas ---
 @app.route('/lojas')
@@ -360,6 +342,107 @@ def cadastrar_manutencao():
 def detalhes_manutencao(manutencao_id):
     manutencao = Manutencao.query.get_or_404(manutencao_id)
     return render_template('detalhes_manutencao.html', manutencao=manutencao)
+
+# --- Rota de Análise/Analytics ---
+@app.route('/analise')
+@ensure_db_tables
+def analise():
+    # Parâmetros de filtro
+    data_inicio = request.args.get('data_inicio')
+    data_fim = request.args.get('data_fim')
+    tipo_manutencao = request.args.get('tipo', 'todas')  # 'todas', 'loja', 'veiculo'
+    
+    # Query base para manutenções
+    query = Manutencao.query
+    
+    # Aplicar filtros
+    if data_inicio:
+        try:
+            data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d')
+            query = query.filter(Manutencao.data_manutencao >= data_inicio_obj)
+        except ValueError:
+            pass
+    
+    if data_fim:
+        try:
+            data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
+            query = query.filter(Manutencao.data_manutencao <= data_fim_obj)
+        except ValueError:
+            pass
+    
+    if tipo_manutencao != 'todas':
+        query = query.filter(Manutencao.tipo == tipo_manutencao)
+    
+    # Buscar manutenções filtradas
+    manutencoes = query.order_by(Manutencao.data_manutencao.desc()).all()
+    
+    # Cálculos de análise
+    total_manutencoes = len(manutencoes)
+    total_gasto = sum(m.preco_total for m in manutencoes)
+    
+    # Análise por tipo
+    manutencoes_loja = [m for m in manutencoes if m.tipo == 'loja']
+    manutencoes_veiculo = [m for m in manutencoes if m.tipo == 'veiculo']
+    
+    gasto_loja = sum(m.preco_total for m in manutencoes_loja)
+    gasto_veiculo = sum(m.preco_total for m in manutencoes_veiculo)
+    
+    # Análise por loja
+    lojas_analise = {}
+    for manutencao in manutencoes_loja:
+        if manutencao.loja:
+            loja_nome = manutencao.loja.nome
+            if loja_nome not in lojas_analise:
+                lojas_analise[loja_nome] = {'total': 0, 'gasto': 0}
+            lojas_analise[loja_nome]['total'] += 1
+            lojas_analise[loja_nome]['gasto'] += manutencao.preco_total
+    
+    # Análise por veículo
+    veiculos_analise = {}
+    for manutencao in manutencoes_veiculo:
+        if manutencao.veiculo:
+            veiculo_placa = manutencao.veiculo.placa
+            if veiculo_placa not in veiculos_analise:
+                veiculos_analise[veiculo_placa] = {'total': 0, 'gasto': 0}
+            veiculos_analise[veiculo_placa]['total'] += 1
+            veiculos_analise[veiculo_placa]['gasto'] += manutencao.preco_total
+    
+    # Análise mensal (últimos 12 meses)
+    from collections import defaultdict
+    manutencoes_mensais = defaultdict(lambda: {'total': 0, 'gasto': 0})
+    
+    for manutencao in manutencoes:
+        mes_ano = manutencao.data_manutencao.strftime('%Y-%m')
+        manutencoes_mensais[mes_ano]['total'] += 1
+        manutencoes_mensais[mes_ano]['gasto'] += manutencao.preco_total
+    
+    # Ordenar por mês
+    manutencoes_mensais_ordenadas = dict(sorted(manutencoes_mensais.items()))
+    
+    # Análise por prioridade removida - campo não existe no modelo
+    
+    # Dados para o template
+    dados_analise = {
+        'filtros': {
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'tipo': tipo_manutencao
+        },
+        'resumo': {
+            'total_manutencoes': total_manutencoes,
+            'total_gasto': total_gasto,
+            'gasto_loja': gasto_loja,
+            'gasto_veiculo': gasto_veiculo,
+            'manutencoes_loja': len(manutencoes_loja),
+            'manutencoes_veiculo': len(manutencoes_veiculo)
+        },
+        'lojas_analise': lojas_analise,
+        'veiculos_analise': veiculos_analise,
+        'manutencoes_mensais': manutencoes_mensais_ordenadas,
+        'manutencoes': manutencoes[:20]  # Últimas 20 para preview
+    }
+    
+    return render_template('analise.html', **dados_analise)
 
 # --- Rota para servir arquivos de upload ---
 # --- ROTAS DE LOGIN E AUTENTICAÇÃO REMOVIDAS ---

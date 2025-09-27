@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Análise de Manutenções - Sistema de Manutenção{% endblock %}
+
+{% block header_title %}Análise de Manutenções{% endblock %}
+
+{% block content %}
+<!-- ===== FILTROS DE ANÁLISE ===== -->
+<div class="card mb-lg">
+    <div class="card-header">
+        <h3>📊 Filtros de Análise</h3>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('analise') }}" class="form-grid">
+            <div class="form-group">
+                <label for="data_inicio">📅 Data Início</label>
+                <input type="date" id="data_inicio" name="data_inicio" 
+                       value="{{ filtros.data_inicio or '' }}" 
+                       class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="data_fim">📅 Data Fim</label>
+                <input type="date" id="data_fim" name="data_fim" 
+                       value="{{ filtros.data_fim or '' }}" 
+                       class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo">🏷️ Tipo de Manutenção</label>
+                <select id="tipo" name="tipo" class="form-control">
+                    <option value="todas" {% if filtros.tipo == 'todas' %}selected{% endif %}>
+                        Todas as Manutenções
+                    </option>
+                    <option value="loja" {% if filtros.tipo == 'loja' %}selected{% endif %}>
+                        🏪 Apenas Lojas
+                    </option>
+                    <option value="veiculo" {% if filtros.tipo == 'veiculo' %}selected{% endif %}>
+                        🚗 Apenas Veículos
+                    </option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">
+                    🔍 Aplicar Filtros
+                </button>
+                <a href="{{ url_for('analise') }}" class="btn btn-secondary">
+                    🗑️ Limpar Filtros
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== RESUMO EXECUTIVO ===== -->
+<div class="stats-grid mb-lg">
+    <div class="stat-card">
+        <div class="stat-number">{{ resumo.total_manutencoes }}</div>
+        <div class="stat-label">Total de Manutenções</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">R$ {{ "%.2f"|format(resumo.total_gasto) }}</div>
+        <div class="stat-label">Valor Total Gasto</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ resumo.manutencoes_loja }}</div>
+        <div class="stat-label">Manutenções em Lojas</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ resumo.manutencoes_veiculo }}</div>
+        <div class="stat-label">Manutenções em Veículos</div>
+    </div>
+</div>
+
+<!-- ===== ANÁLISE POR TIPO ===== -->
+<div class="card mb-lg">
+    <div class="card-header">
+        <h3>📈 Análise por Tipo</h3>
+    </div>
+    <div class="card-body">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">R$ {{ "%.2f"|format(resumo.gasto_loja) }}</div>
+                <div class="stat-label">Gasto com Lojas</div>
+                <div class="text-muted">
+                    {{ "%.1f"|format((resumo.gasto_loja / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0) }}% do total
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number">R$ {{ "%.2f"|format(resumo.gasto_veiculo) }}</div>
+                <div class="stat-label">Gasto com Veículos</div>
+                <div class="text-muted">
+                    {{ "%.1f"|format((resumo.gasto_veiculo / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0) }}% do total
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ANÁLISE POR LOJA ===== -->
+{% if lojas_analise %}
+<div class="card mb-lg">
+    <div class="card-header">
+        <h3>🏪 Análise por Loja</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Loja</th>
+                        <th>Manutenções</th>
+                        <th>Valor Gasto</th>
+                        <th>Média por Manutenção</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loja, dados in lojas_analise.items() %}
+                    <tr>
+                        <td><strong>{{ loja }}</strong></td>
+                        <td>{{ dados.total }}</td>
+                        <td>R$ {{ "%.2f"|format(dados.gasto) }}</td>
+                        <td>R$ {{ "%.2f"|format(dados.gasto / dados.total) if dados.total > 0 else 0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== ANÁLISE POR VEÍCULO ===== -->
+{% if veiculos_analise %}
+<div class="card mb-lg">
+    <div class="card-header">
+        <h3>🚗 Análise por Veículo</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Placa</th>
+                        <th>Manutenções</th>
+                        <th>Valor Gasto</th>
+                        <th>Média por Manutenção</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for placa, dados in veiculos_analise.items() %}
+                    <tr>
+                        <td><strong>{{ placa }}</strong></td>
+                        <td>{{ dados.total }}</td>
+                        <td>R$ {{ "%.2f"|format(dados.gasto) }}</td>
+                        <td>R$ {{ "%.2f"|format(dados.gasto / dados.total) if dados.total > 0 else 0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== ANÁLISE MENSAL ===== -->
+{% if manutencoes_mensais %}
+<div class="card mb-lg">
+    <div class="card-header">
+        <h3>📅 Análise Mensal</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mês/Ano</th>
+                        <th>Manutenções</th>
+                        <th>Valor Gasto</th>
+                        <th>Média por Manutenção</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mes, dados in manutencoes_mensais.items() %}
+                    <tr>
+                        <td><strong>{{ mes }}</strong></td>
+                        <td>{{ dados.total }}</td>
+                        <td>R$ {{ "%.2f"|format(dados.gasto) }}</td>
+                        <td>R$ {{ "%.2f"|format(dados.gasto / dados.total) if dados.total > 0 else 0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ===== ANÁLISE POR PRIORIDADE REMOVIDA ===== -->
+
+<!-- ===== MANUTENÇÕES RECENTES ===== -->
+{% if manutencoes %}
+<div class="card">
+    <div class="card-header">
+        <h3>📋 Manutenções Recentes</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for manutencao in manutencoes %}
+                    <tr>
+                        <td>{{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if manutencao.tipo == 'loja' %}
+                                🏪 {{ manutencao.loja.nome if manutencao.loja else 'Loja não encontrada' }}
+                            {% else %}
+                                🚗 {{ manutencao.veiculo.placa if manutencao.veiculo else 'Veículo não encontrado' }}
+                            {% endif %}
+                        </td>
+                        <td>{{ manutencao.descricao[:50] }}{% if manutencao.descricao|length > 50 %}...{% endif %}</td>
+                        <td>R$ {{ "%.2f"|format(manutencao.preco_total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== ANÁLISE SPECIFIC STYLES ===== */
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: var(--space-md);
+    }
+    
+    .table th,
+    .table td {
+        padding: var(--space-sm) var(--space-md);
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+    }
+    
+    .table th {
+        background-color: var(--gray-50);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text);
+        font-size: var(--font-size-sm);
+    }
+    
+    .table td {
+        font-size: var(--font-size-sm);
+    }
+    
+    .table tbody tr:hover {
+        background-color: var(--gray-50);
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .table {
+            font-size: var(--font-size-xs);
+        }
+        
+        .table th,
+        .table td {
+            padding: var(--space-xs) var(--space-sm);
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-md);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .table th,
+        .table td {
+            padding: var(--space-xs);
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
