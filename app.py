@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
@@ -145,79 +145,10 @@ class FotoManutencao(db.Model):
     def __repr__(self):
         return f'<FotoManutencao {self.nome_arquivo}>'
 
-class Usuario(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(100), nullable=False)
-    tipo = db.Column(db.String(20), nullable=False, default='usuario')  # 'usuario' ou 'analista'
-    ativo = db.Column(db.Boolean, default=True)
-    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
-    ultimo_login = db.Column(db.DateTime)
-    
-    def __repr__(self):
-        return f'<Usuario {self.username}>'
-    
-    def verificar_senha(self, password):
-        # Para simplicidade, vamos usar senhas em texto
-        # Em produção seria melhor usar hash
-        return self.password == password
-    
-    @property
-    def is_analista(self):
-        return self.tipo == 'analista'
+# Modelo Usuario removido - sistema sem autenticação
 
 
-# Função para criar usuários quando necessário
-def create_default_users_if_needed():
-    """Cria usuários padrão se não existirem"""
-    try:
-        # Verificar se já existem usuários
-        existing_users = Usuario.query.count()
-        print(f"👥 Verificando usuários existentes: {existing_users}")
-        
-        if existing_users > 0:
-            users_list = Usuario.query.all()
-            print("📋 Usuários no sistema:")
-            for u in users_list:
-                print(f"   - {u.username} ({u.tipo}) - Ativo: {u.ativo}")
-            return
-        
-        print("🆕 Criando usuários padrão...")
-        
-        # Criar usuário administrador
-        admin_user = Usuario(
-            username='admin',
-            password='admin123',
-            tipo='analista'
-        )
-        
-        # Criar usuário comum de teste
-        test_user = Usuario(
-            username='usuario',
-            password='123456',
-            tipo='usuario'
-        )
-        
-        db.session.add(admin_user)
-        db.session.add(test_user)
-        db.session.commit()
-        
-        # Confirmar que foram criados
-        final_count = Usuario.query.count()
-        print(f"✅ Usuários padrão criados! Total: {final_count}")
-        print("   📧 Admin: admin / admin123")
-        print("   📧 Usuário: usuario / 123456")
-        
-        # Verificar na mão para garantir que funciona
-        test_admin = Usuario.query.filter_by(username='admin').first()
-        if test_admin:
-            print(f"🔐 Teste admin: IDF={test_admin.id}, Ativo={test_admin.ativo}, Senha={test_admin.verificar_senha('admin123')}")
-        
-    except Exception as e:
-        print(f"⚠️  Erro criando usuários padrão: {e}")
-        import traceback
-        traceback.print_exc()
-        db.session.rollback()
+# Função para criar usuários removida - sistema sem autenticação
 
 # Função para garantir criação das tabelas após todas as classes estarem definidas
 def ensure_tables_created():
@@ -229,12 +160,6 @@ def ensure_tables_created():
             db.session.commit()
             print("✅ Todas as tabelas criadas com sucesso!")
             
-            # Após criar tabelas, agora é seguro criar usuários
-            try:
-                create_default_users_if_needed()
-            except Exception as e2:
-                print(f"⚠️  Erro criando usuários padrão: {e2}")
-            
     except Exception as e:
         print(f"⚠️  Erro garantindo tabelas: {e}")
         db.session.rollback()
@@ -243,7 +168,6 @@ def ensure_tables_created():
                 db.create_all()
                 db.session.commit()
                 print("✅ Tabelas criadas na segunda tentativa!")
-                create_default_users_if_needed()
         except Exception as e2:
             print(f"❌ Erro crítico criando tabelas: {e2}")
 
@@ -260,48 +184,12 @@ else:
     except Exception as e:
         print(f"⚠️ Erro no setup inicial (ok se é primeira vez): {e}")
 
-# Decorator para verificar login
-def login_required(func):
-    """Decorator que verifica se o usuário está logado"""
-    def wrapper(*args, **kwargs):
-        session_user_id = session.get('user_id')
-        session_username = session.get('username')
-        print(f"🔒 Decorator login_required - User ID: {session_user_id}, Username: {session_username}")
-        
-        if not session_user_id:
-            print("❌ Não logado: redirecionando para login")
-            flash('Você precisa fazer login para acessar essa página.', 'warning')
-            return redirect(url_for('login'))
-        
-        print(f"✅ Usuário logado - ID: {session_user_id}")
-        return func(*args, **kwargs)
-    
-    wrapper.__name__ = func.__name__
-    return wrapper
-
-# Decorator para verificar se é analista
-def analista_required(func):
-    """Decorator que verifica se o usuário é analista"""
-    def wrapper(*args, **kwargs):
-        if not session.get('user_id'):
-            flash('Você precisa fazer login para acessar essa página.', 'warning')
-            return redirect(url_for('login'))
-        
-        user = Usuario.query.get(session['user_id'])
-        if not user or not user.is_analista:
-            flash('Apenas analistas podem acessar essa área.', 'error')
-            return redirect(url_for('homepage'))
-        
-        return func(*args, **kwargs)
-    
-    wrapper.__name__ = func.__name__
-    return wrapper
+# Decorators de autenticação removidos - sistema sem login
 
 
 # --- Rotas da Aplicação ---
 @app.route('/')
 @ensure_db_tables
-@login_required
 def homepage():
     # Busca todas as lojas e todos os veículos no banco
     lista_de_lojas = Loja.query.all()
@@ -327,7 +215,6 @@ def homepage():
 # --- Rotas para Lojas ---
 @app.route('/lojas')
 @ensure_db_tables
-@login_required
 def listar_lojas():
     lojas = Loja.query.all()
     return render_template('lojas.html', lojas=lojas)
@@ -356,7 +243,6 @@ def detalhes_loja(loja_id):
 # --- Rotas para Veículos ---
 @app.route('/veiculos')
 @ensure_db_tables
-@login_required
 def listar_veiculos():
     veiculos = Veiculo.query.all()
     return render_template('veiculos.html', veiculos=veiculos)
@@ -388,7 +274,6 @@ def detalhes_veiculo(veiculo_id):
 # --- Rotas para Manutenções ---
 @app.route('/manutencoes')
 @ensure_db_tables
-@login_required
 def listar_manutencoes():
     tipo = request.args.get('tipo', 'todas')
     if tipo == 'loja':
@@ -477,95 +362,11 @@ def detalhes_manutencao(manutencao_id):
     return render_template('detalhes_manutencao.html', manutencao=manutencao)
 
 # --- Rota para servir arquivos de upload ---
-# --- ROTAS DE LOGIN E AUTENTICAÇÃO ---
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        print(f"🔐 Tentativa de login: {username} / {password}")
-        
-        # Buscar usuário
-        user = Usuario.query.filter_by(username=username, ativo=True).first()
-        
-        print(f"🔍 Usuário encontrado: {user}")
-        if user:
-            print(f"🔑 Verificando senha: {user.verificar_senha(password)}")
-        
-        if user and user.verificar_senha(password):
-            # Login bem sucedido
-            session['user_id'] = user.id
-            session['username'] = user.username
-            session['user_type'] = user.tipo
-            
-            print(f"✅ Login bem-sucedido: {user.username} (ID: {user.id})")
-            
-            # Atualizar último login
-            user.ultimo_login = datetime.utcnow()
-            db.session.commit()
-            
-            flash(f'Bem-vindo, {user.username}!', 'success')
-            print("🔄 Redirecionando para homepage...")
-            
-            # Testar redirecionamento passo a passo
-            try:
-                return redirect(url_for('homepage'))
-            except Exception as redirect_error:
-                print(f"❌ Erro no redirecionamento: {redirect_error}")
-                return redirect('/')  # Fallback: redirect direto
-        else:
-            print(f"❌ Login falhou para: {username}")
-            flash('Usuário ou senha incorretos.', 'error')
-    
-    # Se não está logado, mostrar tela de login
-    return render_template('login.html')
+# --- ROTAS DE LOGIN E AUTENTICAÇÃO REMOVIDAS ---
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('Logout realizado com sucesso.', 'info')
-    return redirect(url_for('login'))
+# Rota setup-admin removida - sistema sem autenticação
 
-@app.route('/setup-admin')
-def setup_admin():
-    """Rota temporária para forçar criação de usuários admin"""
-    try:
-        with app.app_context():
-            create_default_users_if_needed()
-            usuarios = Usuario.query.all()
-            flash('Usuários administrativos criados com sucesso!', 'success')
-            return f'Setup completo! Usuários criados: {[u.username for u in usuarios]}'
-    except Exception as e:
-        return f'Erro no setup: {str(e)}'
-
-@app.route('/usuario/cadastro', methods=['GET', 'POST'])
-@login_required
-def cadastrar_usuario():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        tipo = request.form.get('tipo', 'usuario')
-        
-        # Verificar se usuário já existe
-        if Usuario.query.filter_by(username=username).first():
-            flash('Nome de usuário já existe.', 'error')
-            return render_template('cadastrar_usuario.html')
-        
-        # Criar novo usuário
-        novo_usuario = Usuario(
-            username=username,
-            password=password,
-            tipo=tipo
-        )
-        
-        db.session.add(novo_usuario)
-        db.session.commit()
-        
-        flash('Usuário cadastrado com sucesso!', 'success')
-        return redirect(url_for('homepage'))
-    
-    return render_template('cadastrar_usuario.html')
+# Rota cadastro de usuário removida - sistema sem autenticação
 
 
 @app.route('/uploads/<filename>')
