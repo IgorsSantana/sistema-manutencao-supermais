@@ -259,8 +259,30 @@
                                     <span class="type-badge veiculo">🚗 {{ manutencao.veiculo.placa if manutencao.veiculo else 'Veículo não encontrado' }}</span>
                                 {% endif %}
                             </td>
-                            <td class="description">{{ manutencao.descricao[:50] }}{% if manutencao.descricao|length > 50 %}...{% endif %}</td>
-                            <td class="value">R$ {{ "%.2f"|format(manutencao.preco_total) }}</td>
+                            <td class="description">
+                                <a href="{{ url_for('detalhes_manutencao', manutencao_id=manutencao.id) }}" 
+                                   style="color: var(--color-text); text-decoration: none;">
+                                    {{ manutencao.descricao[:50] }}{% if manutencao.descricao|length > 50 %}...{% endif %}
+                                </a>
+                            </td>
+                            <td class="value">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>R$ {{ "%.2f"|format(manutencao.preco_total) }}</span>
+                                    <div style="display: flex; gap: 0.25rem;">
+                                        <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" 
+                                           class="btn btn-primary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                            ✏️
+                                        </a>
+                                        <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção?')">
+                                            <button type="submit" class="btn btn-error btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

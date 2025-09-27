@@ -80,9 +80,22 @@
                         </div>
                         <div class="maintenance-footer">
                             <div class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
-                            <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary">
-                                Ver Detalhes
-                            </a>
+                            <div class="maintenance-actions">
+                                <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary btn-sm">
+                                    👁️ Ver
+                                </a>
+                                <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" 
+                                   role="button" class="btn btn-primary btn-sm">
+                                    ✏️ Editar
+                                </a>
+                                <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção?\n\nEsta ação não pode ser desfeita!')">
+                                    <button type="submit" class="btn btn-error btn-sm">
+                                        🗑️ Apagar
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 {% endfor %}
@@ -90,4 +103,52 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .maintenance-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+    }
+    
+    .maintenance-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-border);
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .maintenance-actions {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .maintenance-footer {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .maintenance-actions {
+            justify-content: stretch;
+        }
+        
+        .maintenance-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}

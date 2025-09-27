@@ -50,12 +50,23 @@
         {% endif %}
         
         <div style="margin-top: 1rem;">
-            <a href="/manutencoes" role="button" class="btn btn-secondary">← Voltar para Manutenções</a>
-            {% if manutencao.tipo == 'loja' and manutencao.loja %}
-                <a href="/lojas/{{ manutencao.loja.id }}" role="button" class="btn btn-secondary">🏪 Ver Loja</a>
-            {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
-                <a href="/veiculos/{{ manutencao.veiculo.id }}" role="button" class="btn btn-secondary">🚗 Ver Veículo</a>
-            {% endif %}
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
+                <a href="/manutencoes" role="button" class="btn btn-secondary">← Voltar</a>
+                <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" 
+                   role="button" class="btn btn-primary">✏️ Editar</a>
+                <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" 
+                      style="margin: 0;" 
+                      onsubmit="return confirm('⚠️ ATENÇÃO: Esta ação não pode ser desfeita!\n\nTem certeza que deseja APAGAR esta manutenção?\n\nIsso irá remover:\n• Todas as informações da manutenção\n• Todas as fotos anexadas\n• Todos os dados relacionados')">
+                    <button type="submit" class="btn btn-error" style="width: 100%;">
+                        🗑️ Apagar
+                    </button>
+                </form>
+                {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                    <a href="/lojas/{{ manutencao.loja.id }}" role="button" class="btn btn-secondary">🏪 Ver Loja</a>
+                {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                    <a href="/veiculos/{{ manutencao.veiculo.id }}" role="button" class="btn btn-secondary">🚗 Ver Veículo</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
