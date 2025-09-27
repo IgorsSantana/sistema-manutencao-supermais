@@ -5,53 +5,321 @@
 {% block header_title %}Análise de Manutenções{% endblock %}
 
 {% block content %}
-<!-- ===== FILTROS DE ANÁLISE ===== -->
-<div class="card mb-lg">
-    <div class="card-header">
-        <h3>📊 Filtros de Análise</h3>
-    </div>
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('analise') }}" class="form-grid">
-            <div class="form-group">
-                <label for="data_inicio">📅 Data Início</label>
-                <input type="date" id="data_inicio" name="data_inicio" 
-                       value="{{ filtros.data_inicio or '' }}" 
-                       class="form-control">
+<!-- ===== DESKTOP LAYOUT ===== -->
+<div class="analytics-desktop">
+    <!-- Sidebar de Filtros (Desktop) -->
+    <aside class="filters-sidebar">
+        <div class="sidebar-header">
+            <h3>📊 Filtros</h3>
+        </div>
+        <div class="sidebar-content">
+            <form method="GET" action="{{ url_for('analise') }}" class="filters-form">
+                <div class="form-group">
+                    <label for="data_inicio">📅 Data Início</label>
+                    <input type="date" id="data_inicio" name="data_inicio" 
+                           value="{{ filtros.data_inicio or '' }}" 
+                           class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="data_fim">📅 Data Fim</label>
+                    <input type="date" id="data_fim" name="data_fim" 
+                           value="{{ filtros.data_fim or '' }}" 
+                           class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo">🏷️ Tipo</label>
+                    <select id="tipo" name="tipo" class="form-control">
+                        <option value="todas" {% if filtros.tipo == 'todas' %}selected{% endif %}>
+                            Todas
+                        </option>
+                        <option value="loja" {% if filtros.tipo == 'loja' %}selected{% endif %}>
+                            🏪 Lojas
+                        </option>
+                        <option value="veiculo" {% if filtros.tipo == 'veiculo' %}selected{% endif %}>
+                            🚗 Veículos
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        🔍 Aplicar
+                    </button>
+                    <a href="{{ url_for('analise') }}" class="btn btn-secondary">
+                        🗑️ Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal (Desktop) -->
+    <main class="analytics-main">
+        <!-- KPIs Header -->
+        <section class="kpis-section">
+            <div class="kpi-grid">
+                <div class="kpi-card primary">
+                    <div class="kpi-icon">🔧</div>
+                    <div class="kpi-content">
+                        <div class="kpi-number">{{ resumo.total_manutencoes }}</div>
+                        <div class="kpi-label">Total Manutenções</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card success">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-content">
+                        <div class="kpi-number">R$ {{ "%.2f"|format(resumo.total_gasto) }}</div>
+                        <div class="kpi-label">Valor Total</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card info">
+                    <div class="kpi-icon">🏪</div>
+                    <div class="kpi-content">
+                        <div class="kpi-number">{{ resumo.manutencoes_loja }}</div>
+                        <div class="kpi-label">Lojas</div>
+                    </div>
+                </div>
+                
+                <div class="kpi-card warning">
+                    <div class="kpi-icon">🚗</div>
+                    <div class="kpi-content">
+                        <div class="kpi-number">{{ resumo.manutencoes_veiculo }}</div>
+                        <div class="kpi-label">Veículos</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="data_fim">📅 Data Fim</label>
-                <input type="date" id="data_fim" name="data_fim" 
-                       value="{{ filtros.data_fim or '' }}" 
-                       class="form-control">
+        </section>
+
+        <!-- Análise por Tipo -->
+        <section class="analysis-section">
+            <div class="section-header">
+                <h3>📈 Análise por Tipo</h3>
             </div>
-            
-            <div class="form-group">
-                <label for="tipo">🏷️ Tipo de Manutenção</label>
-                <select id="tipo" name="tipo" class="form-control">
-                    <option value="todas" {% if filtros.tipo == 'todas' %}selected{% endif %}>
-                        Todas as Manutenções
-                    </option>
-                    <option value="loja" {% if filtros.tipo == 'loja' %}selected{% endif %}>
-                        🏪 Apenas Lojas
-                    </option>
-                    <option value="veiculo" {% if filtros.tipo == 'veiculo' %}selected{% endif %}>
-                        🚗 Apenas Veículos
-                    </option>
-                </select>
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <div class="card-header">
+                        <h4>🏪 Lojas</h4>
+                        <div class="card-value">R$ {{ "%.2f"|format(resumo.gasto_loja) }}</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (resumo.gasto_loja / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0 }}%"></div>
+                        </div>
+                        <div class="progress-label">{{ "%.1f"|format((resumo.gasto_loja / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0) }}% do total</div>
+                    </div>
+                </div>
+                
+                <div class="analysis-card">
+                    <div class="card-header">
+                        <h4>🚗 Veículos</h4>
+                        <div class="card-value">R$ {{ "%.2f"|format(resumo.gasto_veiculo) }}</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (resumo.gasto_veiculo / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0 }}%"></div>
+                        </div>
+                        <div class="progress-label">{{ "%.1f"|format((resumo.gasto_veiculo / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0) }}% do total</div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">
-                    🔍 Aplicar Filtros
-                </button>
-                <a href="{{ url_for('analise') }}" class="btn btn-secondary">
-                    🗑️ Limpar Filtros
-                </a>
+        </section>
+
+        <!-- Tabelas de Análise -->
+        <section class="tables-section">
+            <div class="tables-grid">
+                <!-- Análise por Loja -->
+                {% if lojas_analise %}
+                <div class="table-card">
+                    <div class="table-header">
+                        <h4>🏪 Por Loja</h4>
+                    </div>
+                    <div class="table-content">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Loja</th>
+                                    <th>Qtd</th>
+                                    <th>Valor</th>
+                                    <th>Média</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for loja, dados in lojas_analise.items() %}
+                                <tr>
+                                    <td><strong>{{ loja }}</strong></td>
+                                    <td>{{ dados.total }}</td>
+                                    <td>R$ {{ "%.2f"|format(dados.gasto) }}</td>
+                                    <td>R$ {{ "%.2f"|format(dados.gasto / dados.total) if dados.total > 0 else 0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Análise por Veículo -->
+                {% if veiculos_analise %}
+                <div class="table-card">
+                    <div class="table-header">
+                        <h4>🚗 Por Veículo</h4>
+                    </div>
+                    <div class="table-content">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Placa</th>
+                                    <th>Qtd</th>
+                                    <th>Valor</th>
+                                    <th>Média</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for placa, dados in veiculos_analise.items() %}
+                                <tr>
+                                    <td><strong>{{ placa }}</strong></td>
+                                    <td>{{ dados.total }}</td>
+                                    <td>R$ {{ "%.2f"|format(dados.gasto) }}</td>
+                                    <td>R$ {{ "%.2f"|format(dados.gasto / dados.total) if dados.total > 0 else 0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
             </div>
-        </form>
-    </div>
+        </section>
+
+        <!-- Análise Mensal -->
+        {% if manutencoes_mensais %}
+        <section class="monthly-section">
+            <div class="section-header">
+                <h3>📅 Evolução Mensal</h3>
+            </div>
+            <div class="monthly-table-container">
+                <table class="monthly-table">
+                    <thead>
+                        <tr>
+                            <th>Mês/Ano</th>
+                            <th>Manutenções</th>
+                            <th>Valor Gasto</th>
+                            <th>Média</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mes, dados in manutencoes_mensais.items() %}
+                        <tr>
+                            <td><strong>{{ mes }}</strong></td>
+                            <td>{{ dados.total }}</td>
+                            <td>R$ {{ "%.2f"|format(dados.gasto) }}</td>
+                            <td>R$ {{ "%.2f"|format(dados.gasto / dados.total) if dados.total > 0 else 0 }}</td>
+                            <td>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill" style="width: {{ (dados.gasto / resumo.total_gasto * 100) if resumo.total_gasto > 0 else 0 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Manutenções Recentes -->
+        {% if manutencoes %}
+        <section class="recent-section">
+            <div class="section-header">
+                <h3>📋 Manutenções Recentes</h3>
+            </div>
+            <div class="recent-table-container">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for manutencao in manutencoes %}
+                        <tr>
+                            <td>{{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if manutencao.tipo == 'loja' %}
+                                    <span class="type-badge loja">🏪 {{ manutencao.loja.nome if manutencao.loja else 'Loja não encontrada' }}</span>
+                                {% else %}
+                                    <span class="type-badge veiculo">🚗 {{ manutencao.veiculo.placa if manutencao.veiculo else 'Veículo não encontrado' }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="description">{{ manutencao.descricao[:50] }}{% if manutencao.descricao|length > 50 %}...{% endif %}</td>
+                            <td class="value">R$ {{ "%.2f"|format(manutencao.preco_total) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </main>
 </div>
+
+<!-- ===== MOBILE LAYOUT (Mantido Original) ===== -->
+<div class="analytics-mobile">
+    <!-- Filtros Mobile -->
+    <div class="card mb-lg">
+        <div class="card-header">
+            <h3>📊 Filtros de Análise</h3>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('analise') }}" class="form-grid">
+                <div class="form-group">
+                    <label for="data_inicio_mobile">📅 Data Início</label>
+                    <input type="date" id="data_inicio_mobile" name="data_inicio" 
+                           value="{{ filtros.data_inicio or '' }}" 
+                           class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="data_fim_mobile">📅 Data Fim</label>
+                    <input type="date" id="data_fim_mobile" name="data_fim" 
+                           value="{{ filtros.data_fim or '' }}" 
+                           class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo_mobile">🏷️ Tipo de Manutenção</label>
+                    <select id="tipo_mobile" name="tipo" class="form-control">
+                        <option value="todas" {% if filtros.tipo == 'todas' %}selected{% endif %}>
+                            Todas as Manutenções
+                        </option>
+                        <option value="loja" {% if filtros.tipo == 'loja' %}selected{% endif %}>
+                            🏪 Apenas Lojas
+                        </option>
+                        <option value="veiculo" {% if filtros.tipo == 'veiculo' %}selected{% endif %}>
+                            🚗 Apenas Veículos
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        🔍 Aplicar Filtros
+                    </button>
+                    <a href="{{ url_for('analise') }}" class="btn btn-secondary">
+                        🗑️ Limpar Filtros
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 
 <!-- ===== RESUMO EXECUTIVO ===== -->
 <div class="stats-grid mb-lg">
@@ -242,71 +510,479 @@
 </div>
 {% endif %}
 
+</div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    /* ===== ANÁLISE SPECIFIC STYLES ===== */
+    /* ===== DESKTOP ANALYTICS LAYOUT ===== */
     
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: var(--space-md);
-    }
-    
-    .table th,
-    .table td {
-        padding: var(--space-sm) var(--space-md);
-        text-align: left;
-        border-bottom: 1px solid var(--color-border);
-    }
-    
-    .table th {
-        background-color: var(--gray-50);
-        font-weight: var(--font-weight-semibold);
-        color: var(--color-text);
-        font-size: var(--font-size-sm);
-    }
-    
-    .table td {
-        font-size: var(--font-size-sm);
-    }
-    
-    .table tbody tr:hover {
-        background-color: var(--gray-50);
-    }
-    
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Mobile optimizations */
-    @media (max-width: 768px) {
-        .table {
-            font-size: var(--font-size-xs);
+    /* Desktop Layout - Apenas para telas >= 1024px */
+    @media (min-width: 1024px) {
+        .analytics-mobile {
+            display: none !important;
         }
         
-        .table th,
-        .table td {
-            padding: var(--space-xs) var(--space-sm);
+        .analytics-desktop {
+            display: block;
+            min-height: 100vh;
+            background: var(--color-background);
         }
         
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+        .analytics-desktop {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--space-xl);
+            padding: var(--space-xl);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Sidebar de Filtros */
+        .filters-sidebar {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-xl);
+        }
+        
+        .sidebar-header {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--color-border);
+            background: var(--primary-50);
+        }
+        
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .sidebar-content {
+            padding: var(--space-lg);
+        }
+        
+        .filters-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+        
+        .filter-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+        
+        /* Conteúdo Principal */
+        .analytics-main {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+        
+        /* KPIs Section */
+        .kpis-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            padding: var(--space-xl);
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-lg);
+        }
+        
+        .kpi-card {
+            display: flex;
+            align-items: center;
             gap: var(--space-md);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
+            transition: all var(--transition);
+        }
+        
+        .kpi-card.primary {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+        }
+        
+        .kpi-card.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .kpi-card.info {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        
+        .kpi-card.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .kpi-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .kpi-content {
+            flex: 1;
+        }
+        
+        .kpi-number {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            line-height: 1.2;
+        }
+        
+        .kpi-label {
+            font-size: var(--font-size-sm);
+            opacity: 0.9;
+            margin-top: var(--space-xs);
+        }
+        
+        /* Sections */
+        .analysis-section,
+        .tables-section,
+        .monthly-section,
+        .recent-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            padding: var(--space-lg) var(--space-xl);
+            background: var(--primary-50);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .section-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        /* Analysis Cards */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+            padding: var(--space-xl);
+        }
+        
+        .analysis-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            border: 1px solid var(--color-border);
+        }
+        
+        .analysis-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+        }
+        
+        .analysis-card h4 {
+            margin: 0;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .card-value {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+            transition: width 0.3s ease;
+        }
+        
+        .progress-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            text-align: right;
+        }
+        
+        /* Tables Grid */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+            padding: var(--space-xl);
+        }
+        
+        .table-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            padding: var(--space-md) var(--space-lg);
+            background: var(--primary-100);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .table-header h4 {
+            margin: 0;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .table-content {
+            padding: 0;
+        }
+        
+        /* Analytics Tables */
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .analytics-table th,
+        .analytics-table td {
+            padding: var(--space-sm) var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .analytics-table th {
+            background: var(--gray-100);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+            font-size: var(--font-size-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .analytics-table td {
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+        }
+        
+        .analytics-table tbody tr:hover {
+            background: var(--primary-50);
+        }
+        
+        /* Monthly Table */
+        .monthly-table-container {
+            padding: var(--space-xl);
+        }
+        
+        .monthly-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .monthly-table th,
+        .monthly-table td {
+            padding: var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .monthly-table th {
+            background: var(--gray-100);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+        
+        .monthly-table td {
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+        }
+        
+        .mini-progress {
+            width: 60px;
+            height: 4px;
+            background: var(--gray-200);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .mini-progress-fill {
+            height: 100%;
+            background: var(--primary-500);
+            transition: width 0.3s ease;
+        }
+        
+        /* Recent Table */
+        .recent-table-container {
+            padding: var(--space-xl);
+        }
+        
+        .recent-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .recent-table th,
+        .recent-table td {
+            padding: var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .recent-table th {
+            background: var(--gray-100);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+        
+        .recent-table td {
+            font-size: var(--font-size-sm);
+            color: var(--color-text);
+        }
+        
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        .type-badge.loja {
+            background: var(--primary-100);
+            color: var(--primary-700);
+        }
+        
+        .type-badge.veiculo {
+            background: var(--warning-100);
+            color: var(--warning-700);
+        }
+        
+        .description {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .value {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-primary);
         }
     }
     
-    @media (max-width: 480px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+    /* ===== MOBILE LAYOUT (Mantido Original) ===== */
+    
+    /* Desktop esconde mobile */
+    @media (min-width: 1024px) {
+        .analytics-mobile {
+            display: none !important;
+        }
+    }
+    
+    /* Mobile mostra apenas mobile */
+    @media (max-width: 1023px) {
+        .analytics-desktop {
+            display: none !important;
+        }
+        
+        .analytics-mobile {
+            display: block;
+        }
+        
+        /* Estilos originais mantidos para mobile */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-md);
         }
         
         .table th,
         .table td {
-            padding: var(--space-xs);
-            font-size: 0.75rem;
+            padding: var(--space-sm) var(--space-md);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .table th {
+            background-color: var(--gray-50);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+        
+        .table td {
+            font-size: var(--font-size-sm);
+        }
+        
+        .table tbody tr:hover {
+            background-color: var(--gray-50);
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .table {
+                font-size: var(--font-size-xs);
+            }
+            
+            .table th,
+            .table td {
+                padding: var(--space-xs) var(--space-sm);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--space-md);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table th,
+            .table td {
+                padding: var(--space-xs);
+                font-size: 0.75rem;
+            }
         }
     }
 </style>
