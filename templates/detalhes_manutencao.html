@@ -49,18 +49,21 @@
             </div>
         {% endif %}
         
-        <div style="margin-top: 1rem;">
-            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
-                <a href="/manutencoes" role="button" class="btn btn-secondary">← Voltar</a>
-                <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" 
-                   role="button" class="btn btn-primary">✏️ Editar</a>
-                <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" 
-                      style="margin: 0;" 
-                      onsubmit="return confirm('⚠️ ATENÇÃO: Esta ação não pode ser desfeita!\n\nTem certeza que deseja APAGAR esta manutenção?\n\nIsso irá remover:\n• Todas as informações da manutenção\n• Todas as fotos anexadas\n• Todos os dados relacionados')">
-                    <button type="submit" class="btn btn-error" style="width: 100%;">
-                        🗑️ Apagar
+        <div class="action-buttons">
+            <div class="primary-actions">
+                <a href="/manutencoes/{{ manutencao.id }}/editar" role="button" class="btn btn-primary">
+                    ✏️ Editar Manutenção
+                </a>
+                <form method="POST" action="/manutencoes/{{ manutencao.id }}/apagar" style="display: inline;" 
+                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção? Esta ação não pode ser desfeita.')">
+                    <button type="submit" class="btn btn-error">
+                        🗑️ Apagar Manutenção
                     </button>
                 </form>
+            </div>
+            
+            <div class="secondary-actions">
+                <a href="/manutencoes" role="button" class="btn btn-secondary">← Voltar para Manutenções</a>
                 {% if manutencao.tipo == 'loja' and manutencao.loja %}
                     <a href="/lojas/{{ manutencao.loja.id }}" role="button" class="btn btn-secondary">🏪 Ver Loja</a>
                 {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
@@ -101,6 +104,42 @@
         <button onclick="closeImageModal()" style="position: absolute; top: 20px; right: 35px; color: white; font-size: 40px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .action-buttons {
+        margin-top: var(--space-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+    
+    .primary-actions {
+        display: flex;
+        gap: var(--space-md);
+        flex-wrap: wrap;
+    }
+    
+    .secondary-actions {
+        display: flex;
+        gap: var(--space-md);
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 768px) {
+        .primary-actions,
+        .secondary-actions {
+            flex-direction: column;
+        }
+        
+        .primary-actions .btn,
+        .secondary-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}

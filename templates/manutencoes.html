@@ -84,13 +84,11 @@
                                 <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary btn-sm">
                                     👁️ Ver
                                 </a>
-                                <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" 
-                                   role="button" class="btn btn-primary btn-sm">
+                                <a href="/manutencoes/{{ manutencao.id }}/editar" role="button" class="btn btn-primary btn-sm">
                                     ✏️ Editar
                                 </a>
-                                <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" 
-                                      style="display: inline;" 
-                                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção?\n\nEsta ação não pode ser desfeita!')">
+                                <form method="POST" action="/manutencoes/{{ manutencao.id }}/apagar" style="display: inline;" 
+                                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção? Esta ação não pode ser desfeita.')">
                                     <button type="submit" class="btn btn-error btn-sm">
                                         🗑️ Apagar
                                     </button>
@@ -103,52 +101,59 @@
         {% endif %}
     </div>
 </div>
-{% endblock %}
 
 {% block extra_css %}
 <style>
     .maintenance-actions {
         display: flex;
-        gap: 0.5rem;
+        gap: var(--space-xs);
         flex-wrap: wrap;
-        justify-content: flex-end;
-    }
-    
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
-        border-radius: 0.375rem;
+        align-items: center;
     }
     
     .maintenance-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--color-border);
+        flex-wrap: wrap;
+        gap: var(--space-sm);
     }
     
-    /* Mobile optimizations */
+    .btn-sm {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: var(--font-size-xs);
+        border-radius: var(--radius-sm);
+    }
+    
     @media (max-width: 768px) {
-        .maintenance-actions {
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        
         .maintenance-footer {
             flex-direction: column;
-            gap: 1rem;
             align-items: stretch;
+            gap: var(--space-sm);
         }
         
         .maintenance-actions {
-            justify-content: stretch;
+            justify-content: center;
+        }
+        
+        .price {
+            text-align: center;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .maintenance-actions {
+            flex-direction: column;
         }
         
         .maintenance-actions .btn {
             width: 100%;
+            text-align: center;
         }
     }
 </style>
+{% endblock %}
 {% endblock %}

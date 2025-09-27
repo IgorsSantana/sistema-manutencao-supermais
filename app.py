@@ -344,118 +344,61 @@ def detalhes_manutencao(manutencao_id):
     return render_template('detalhes_manutencao.html', manutencao=manutencao)
 
 @app.route('/manutencoes/<int:manutencao_id>/editar', methods=['GET', 'POST'])
-@ensure_db_tables
 def editar_manutencao(manutencao_id):
     manutencao = Manutencao.query.get_or_404(manutencao_id)
     
     if request.method == 'POST':
-        try:
-            # Atualizar dados da manutenção
-            manutencao.data_manutencao = datetime.strptime(request.form['data_manutencao'], '%Y-%m-%d')
-            manutencao.tipo = request.form['tipo']
-            manutencao.descricao = request.form['descricao']
-            manutencao.preco_total = float(request.form['preco_total'])
-            
-            # Atualizar relacionamentos
-            if request.form['tipo'] == 'loja':
-                manutencao.loja_id = int(request.form['loja_id']) if request.form['loja_id'] else None
-                manutencao.veiculo_id = None
-            else:
-                manutencao.veiculo_id = int(request.form['veiculo_id']) if request.form['veiculo_id'] else None
-                manutencao.loja_id = None
-            
-            # Upload de novas fotos
-            if 'fotos' in request.files:
-                fotos = request.files.getlist('fotos')
-                fotos_uploaded = 0
-                
-                for foto in fotos:
-                    if foto and foto.filename and allowed_file(foto.filename):
-                        try:
-                            filename = secure_filename(foto.filename)
-                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
-                            filename = timestamp + filename
-                            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                            foto.save(filepath)
-                            
-                            foto_manutencao = FotoManutencao(
-                                nome_arquivo=filename,
-                                caminho_arquivo=filepath,
-                                manutencao_id=manutencao.id
-                            )
-                            db.session.add(foto_manutencao)
-                            fotos_uploaded += 1
-                            
-                        except Exception as e:
-                            print(f"Erro ao fazer upload da foto {foto.filename}: {str(e)}")
-                            continue
-                
-                if fotos_uploaded > 0:
-                    flash(f'{fotos_uploaded} nova(s) foto(s) anexada(s)!', 'success')
-            
-            db.session.commit()
-            flash('Manutenção atualizada com sucesso!', 'success')
-            return redirect(url_for('detalhes_manutencao', manutencao_id=manutencao.id))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erro ao atualizar manutenção: {str(e)}', 'error')
+        # Atualizar dados da manutenção
+        manutencao.titulo = request.form['titulo']
+        manutencao.descricao = request.form.get('descricao', '')
+        manutencao.preco_total = request.form.get('preco_total', 0, type=float)
+        
+        # Atualizar data se fornecida
+        data_manutencao = request.form.get('data_manutencao')
+        if data_manutencao:
+            manutencao.data_manutencao = datetime.strptime(data_manutencao, '%Y-%m-%d')
+        
+        # Atualizar loja ou veículo
+        if manutencao.tipo == 'loja':
+            loja_id = request.form.get('loja_id', type=int)
+            manutencao.loja_id = loja_id if loja_id else None
+        elif manutencao.tipo == 'veiculo':
+            veiculo_id = request.form.get('veiculo_id', type=int)
+            manutencao.veiculo_id = veiculo_id if veiculo_id else None
+        
+        db.session.commit()
+        flash('Manutenção atualizada com sucesso!', 'success')
+        return redirect(url_for('detalhes_manutencao', manutencao_id=manutencao.id))
     
+    # Buscar lojas e veículos para o formulário
     lojas = Loja.query.all()
     veiculos = Veiculo.query.all()
-    return render_template('editar_manutencao.html', manutencao=manutencao, lojas=lojas, veiculos=veiculos)
+    
+    return render_template('editar_manutencao.html', 
+                         manutencao=manutencao, 
+                         lojas=lojas, 
+                         veiculos=veiculos)
 
 @app.route('/manutencoes/<int:manutencao_id>/apagar', methods=['POST'])
-@ensure_db_tables
 def apagar_manutencao(manutencao_id):
     manutencao = Manutencao.query.get_or_404(manutencao_id)
     
-    try:
-        # Apagar fotos associadas
-        fotos = FotoManutencao.query.filter_by(manutencao_id=manutencao.id).all()
-        for foto in fotos:
-            # Tentar apagar o arquivo físico
-            try:
-                if os.path.exists(foto.caminho_arquivo):
-                    os.remove(foto.caminho_arquivo)
-            except Exception as e:
-                print(f"Erro ao apagar arquivo {foto.caminho_arquivo}: {str(e)}")
-            
-            db.session.delete(foto)
+    # Apagar fotos associadas
+    for foto in manutencao.fotos:
+        # Remover arquivo físico
+        foto_path = os.path.join(app.config['UPLOAD_FOLDER'], foto.nome_arquivo)
+        if os.path.exists(foto_path):
+            os.remove(foto_path)
         
-        # Apagar a manutenção
-        db.session.delete(manutencao)
-        db.session.commit()
-        
-        flash('Manutenção apagada com sucesso!', 'success')
-        return redirect(url_for('listar_manutencoes'))
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao apagar manutenção: {str(e)}', 'error')
-        return redirect(url_for('detalhes_manutencao', manutencao_id=manutencao_id))
-
-@app.route('/manutencoes/<int:manutencao_id>/foto/<int:foto_id>/apagar', methods=['POST'])
-@ensure_db_tables
-def apagar_foto_manutencao(manutencao_id, foto_id):
-    foto = FotoManutencao.query.filter_by(id=foto_id, manutencao_id=manutencao_id).first_or_404()
-    
-    try:
-        # Apagar arquivo físico
-        if os.path.exists(foto.caminho_arquivo):
-            os.remove(foto.caminho_arquivo)
-        
-        # Apagar registro do banco
+        # Remover do banco
         db.session.delete(foto)
-        db.session.commit()
-        
-        flash('Foto apagada com sucesso!', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao apagar foto: {str(e)}', 'error')
     
-    return redirect(url_for('detalhes_manutencao', manutencao_id=manutencao_id))
+    # Apagar manutenção
+    db.session.delete(manutencao)
+    db.session.commit()
+    
+    flash('Manutenção apagada com sucesso!', 'success')
+    return redirect(url_for('listar_manutencoes'))
 
 # --- Rota de Análise/Analytics ---
 @app.route('/analise')
