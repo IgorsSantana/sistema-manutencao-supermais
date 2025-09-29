@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+from image_utils import resize_image, process_uploaded_images
 
 try:
     from dotenv import load_dotenv
@@ -301,19 +302,19 @@ def cadastrar_manutencao():
         db.session.add(nova_manutencao)
         db.session.commit()
         
-        # Upload de fotos
+        # Upload de fotos com redimensionamento
         if 'fotos' in request.files:
             fotos = request.files.getlist('fotos')
+            fotos_validas = [f for f in fotos if f and f.filename and allowed_file(f.filename)]
             fotos_uploaded = 0
             
-            for foto in fotos:
-                if foto and foto.filename and allowed_file(foto.filename):
-                    try:
-                        filename = secure_filename(foto.filename)
-                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
-                        filename = timestamp + filename
+            if fotos_validas:
+                try:
+                    # Processar e redimensionar todas as fotos
+                    processed_files = process_uploaded_images(fotos_validas, app.config['UPLOAD_FOLDER'])
+                    
+                    for filename in processed_files:
                         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                        foto.save(filepath)
                         
                         foto_manutencao = FotoManutencao(
                             nome_arquivo=filename,
@@ -322,13 +323,13 @@ def cadastrar_manutencao():
                         )
                         db.session.add(foto_manutencao)
                         fotos_uploaded += 1
+                    
+                    if fotos_uploaded > 0:
+                        flash(f'{fotos_uploaded} foto(s) anexada(s) e otimizada(s) com sucesso!', 'success')
                         
-                    except Exception as e:
-                        print(f"Erro ao fazer upload da foto {foto.filename}: {str(e)}")
-                        continue
-            
-            if fotos_uploaded > 0:
-                flash(f'{fotos_uploaded} foto(s) anexada(s) com sucesso!', 'success')
+                except Exception as e:
+                    print(f"Erro ao processar fotos: {str(e)}")
+                    flash('Erro ao processar algumas fotos. Verifique se são imagens válidas.', 'warning')
         
         db.session.commit()
         flash('Manutenção cadastrada com sucesso!', 'success')
@@ -377,6 +378,33 @@ def editar_manutencao(manutencao_id):
         elif manutencao.tipo == 'veiculo':
             veiculo_id = request.form.get('veiculo_id', type=int)
             manutencao.veiculo_id = veiculo_id if veiculo_id else None
+        
+        # Upload de novas fotos com redimensionamento
+        if 'fotos' in request.files:
+            fotos = request.files.getlist('fotos')
+            fotos_validas = [f for f in fotos if f and f.filename and allowed_file(f.filename)]
+            
+            if fotos_validas:
+                try:
+                    # Processar e redimensionar todas as fotos
+                    processed_files = process_uploaded_images(fotos_validas, app.config['UPLOAD_FOLDER'])
+                    
+                    for filename in processed_files:
+                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        
+                        foto_manutencao = FotoManutencao(
+                            nome_arquivo=filename,
+                            caminho_arquivo=filepath,
+                            manutencao_id=manutencao.id
+                        )
+                        db.session.add(foto_manutencao)
+                    
+                    if processed_files:
+                        flash(f'{len(processed_files)} nova(s) foto(s) anexada(s) e otimizada(s) com sucesso!', 'success')
+                        
+                except Exception as e:
+                    print(f"Erro ao processar novas fotos: {str(e)}")
+                    flash('Erro ao processar algumas fotos. Verifique se são imagens válidas.', 'warning')
         
         db.session.commit()
         flash('Manutenção atualizada com sucesso!', 'success')

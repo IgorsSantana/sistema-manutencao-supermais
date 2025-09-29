@@ -3,45 +3,183 @@
 {% block title %}Cadastrar Manutenção - Sistema de Manutenção{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h3>🔧 Cadastrar Nova Manutenção</h3>
+<!-- ===== DESKTOP LAYOUT ===== -->
+<div class="create-desktop">
+    <div class="create-container">
+        <!-- Header -->
+        <div class="create-header">
+            <div class="header-icon">🔧</div>
+            <div class="header-content">
+                <h1>Cadastrar Nova Manutenção</h1>
+                <p>Registre uma nova manutenção no sistema</p>
+            </div>
+        </div>
+
+        <!-- Formulário Principal -->
+        <form action="{{ url_for('cadastrar_manutencao') }}" method="POST" enctype="multipart/form-data" class="create-form">
+            <!-- Seção 1: Informações Básicas -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>📋 Informações Básicas</h3>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="tipo" class="form-label required">Tipo de Manutenção</label>
+                            <select id="tipo" name="tipo" required onchange="toggleTipoManutencao()" class="form-control">
+                                <option value="">Selecione o tipo</option>
+                                <option value="loja" {% if request.args.get('loja_id') %}selected{% endif %}>🏪 Loja</option>
+                                <option value="veiculo" {% if request.args.get('veiculo_id') %}selected{% endif %}>🚗 Veículo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="data_manutencao" class="form-label">Data da Manutenção</label>
+                            <input type="date" id="data_manutencao" name="data_manutencao" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="titulo" class="form-label required">Título da Manutenção</label>
+                        <input type="text" id="titulo" name="titulo" placeholder="Ex: Troca de lâmpadas, Manutenção do ar-condicionado..." required class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea id="descricao" name="descricao" rows="4" placeholder="Descreva os detalhes da manutenção realizada, materiais utilizados, observações importantes..." class="form-control"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="preco_total" class="form-label">Preço Total (R$)</label>
+                        <input type="number" id="preco_total" name="preco_total" step="0.01" min="0" placeholder="0.00" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 2: Loja ou Veículo -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3 id="section-tipo-title">Selecione o Tipo</h3>
+                </div>
+                <div class="section-content">
+                    <div id="loja_select" class="tipo-select" style="display: none;">
+                        <div class="form-group">
+                            <label for="loja_id" class="form-label required">Loja</label>
+                            <select id="loja_id" name="loja_id" class="form-control">
+                                <option value="">Selecione a loja</option>
+                                {% for loja in lojas %}
+                                    <option value="{{ loja.id }}" {% if request.args.get('loja_id')|int == loja.id %}selected{% endif %}>
+                                        {{ loja.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="veiculo_select" class="tipo-select" style="display: none;">
+                        <div class="form-group">
+                            <label for="veiculo_id" class="form-label required">Veículo</label>
+                            <select id="veiculo_id" name="veiculo_id" class="form-control">
+                                <option value="">Selecione o veículo</option>
+                                {% for veiculo in veiculos %}
+                                    <option value="{{ veiculo.id }}" {% if request.args.get('veiculo_id')|int == veiculo.id %}selected{% endif %}>
+                                        {{ veiculo.placa }} - {{ veiculo.modelo }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 3: Fotos -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>📷 Fotos da Manutenção</h3>
+                    <span class="section-subtitle">Opcional - Adicione fotos para documentar a manutenção</span>
+                </div>
+                <div class="section-content">
+                    <div class="upload-area" onclick="document.getElementById('fotos').click()">
+                        <input type="file" id="fotos" name="fotos" multiple accept="image/*" style="display: none;">
+                        <div class="upload-content">
+                            <div class="upload-icon">📷</div>
+                            <h4>Adicionar Fotos</h4>
+                            <p>Clique para selecionar ou arraste as fotos aqui</p>
+                            <small>Formatos: JPG, PNG, GIF (máx. 5MB cada)</small>
+                        </div>
+                    </div>
+                    <div id="photo-preview" class="photo-preview"></div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    💾 Cadastrar Manutenção
+                </button>
+                <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary btn-large">
+                    ❌ Cancelar
+                </a>
+            </div>
+        </form>
     </div>
-    <div class="card-body">
-        <form action="/manutencoes/cadastrar" method="POST" enctype="multipart/form-data">
-            <div class="grid">
-                <div>
-                    <label for="tipo">Tipo de Manutenção *</label>
-                    <select id="tipo" name="tipo" required onchange="toggleTipoManutencao()">
-                        <option value="">Selecione o tipo</option>
-                        <option value="loja" {% if request.args.get('loja_id') %}selected{% endif %}>🏪 Loja</option>
-                        <option value="veiculo" {% if request.args.get('veiculo_id') %}selected{% endif %}>🚗 Veículo</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="data_manutencao">Data da Manutenção</label>
-                    <input type="date" id="data_manutencao" name="data_manutencao">
-                </div>
+</div>
+
+<!-- ===== MOBILE LAYOUT ===== -->
+<div class="create-mobile">
+    <div class="mobile-header">
+        <div class="mobile-icon">🔧</div>
+        <div class="mobile-title">
+            <h1>Nova Manutenção</h1>
+            <p>Registre uma manutenção</p>
+        </div>
+    </div>
+
+    <form action="{{ url_for('cadastrar_manutencao') }}" method="POST" enctype="multipart/form-data" class="mobile-form">
+        <!-- Tipo e Data -->
+        <div class="mobile-section">
+            <h3>📋 Básico</h3>
+            <div class="mobile-form-group">
+                <label for="tipo_mobile" class="mobile-label required">Tipo</label>
+                <select id="tipo_mobile" name="tipo" required onchange="toggleTipoManutencaoMobile()" class="mobile-input">
+                    <option value="">Selecione</option>
+                    <option value="loja" {% if request.args.get('loja_id') %}selected{% endif %}>🏪 Loja</option>
+                    <option value="veiculo" {% if request.args.get('veiculo_id') %}selected{% endif %}>🚗 Veículo</option>
+                </select>
             </div>
             
-            <div>
-                <label for="titulo">Título da Manutenção *</label>
-                <input type="text" id="titulo" name="titulo" placeholder="Ex: Troca de lâmpadas" required>
+            <div class="mobile-form-group">
+                <label for="data_manutencao_mobile" class="mobile-label">Data</label>
+                <input type="date" id="data_manutencao_mobile" name="data_manutencao" class="mobile-input">
+            </div>
+        </div>
+
+        <!-- Título e Descrição -->
+        <div class="mobile-section">
+            <h3>📝 Detalhes</h3>
+            <div class="mobile-form-group">
+                <label for="titulo_mobile" class="mobile-label required">Título</label>
+                <input type="text" id="titulo_mobile" name="titulo" placeholder="Ex: Troca de lâmpadas" required class="mobile-input">
             </div>
             
-            <div>
-                <label for="descricao">Descrição</label>
-                <textarea id="descricao" name="descricao" rows="4" placeholder="Descreva os detalhes da manutenção realizada..."></textarea>
+            <div class="mobile-form-group">
+                <label for="descricao_mobile" class="mobile-label">Descrição</label>
+                <textarea id="descricao_mobile" name="descricao" rows="3" placeholder="Detalhes da manutenção..." class="mobile-input"></textarea>
             </div>
             
-            <div class="grid">
-                <div>
-                    <label for="preco_total">Preço Total (R$)</label>
-                    <input type="number" id="preco_total" name="preco_total" step="0.01" min="0" placeholder="0.00">
-                </div>
-                <div id="loja_select" style="display: none;">
-                    <label for="loja_id">Loja *</label>
-                    <select id="loja_id" name="loja_id">
+            <div class="mobile-form-group">
+                <label for="preco_total_mobile" class="mobile-label">Preço (R$)</label>
+                <input type="number" id="preco_total_mobile" name="preco_total" step="0.01" min="0" placeholder="0.00" class="mobile-input">
+            </div>
+        </div>
+
+        <!-- Loja/Veículo -->
+        <div class="mobile-section">
+            <h3 id="mobile-section-tipo-title">Selecione</h3>
+            <div id="loja_select_mobile" class="mobile-tipo-select" style="display: none;">
+                <div class="mobile-form-group">
+                    <label for="loja_id_mobile" class="mobile-label required">Loja</label>
+                    <select id="loja_id_mobile" name="loja_id" class="mobile-input">
                         <option value="">Selecione a loja</option>
                         {% for loja in lojas %}
                             <option value="{{ loja.id }}" {% if request.args.get('loja_id')|int == loja.id %}selected{% endif %}>
@@ -50,9 +188,12 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div id="veiculo_select" style="display: none;">
-                    <label for="veiculo_id">Veículo *</label>
-                    <select id="veiculo_id" name="veiculo_id">
+            </div>
+            
+            <div id="veiculo_select_mobile" class="mobile-tipo-select" style="display: none;">
+                <div class="mobile-form-group">
+                    <label for="veiculo_id_mobile" class="mobile-label required">Veículo</label>
+                    <select id="veiculo_id_mobile" name="veiculo_id" class="mobile-input">
                         <option value="">Selecione o veículo</option>
                         {% for veiculo in veiculos %}
                             <option value="{{ veiculo.id }}" {% if request.args.get('veiculo_id')|int == veiculo.id %}selected{% endif %}>
@@ -62,140 +203,552 @@
                     </select>
                 </div>
             </div>
-            
-            <div>
-                <label for="fotos">📷 Fotos da Manutenção</label>
-                <input type="file" id="fotos" name="fotos" multiple accept="image/*" onchange="previewImages()" style="display: none;">
-                <div class="upload-area" onclick="document.getElementById('fotos').click()">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
-                    <p style="margin: 0; color: #1f2937; font-weight: 600;">Toque para selecionar fotos</p>
-                    <small style="color: #6b7280;">PNG, JPG, JPEG, GIF, WEBP (máx. 16MB)</small>
+        </div>
+
+        <!-- Fotos Mobile -->
+        <div class="mobile-section">
+            <h3>📷 Fotos</h3>
+            <div class="mobile-upload-area" onclick="document.getElementById('fotos_mobile').click()">
+                <input type="file" id="fotos_mobile" name="fotos" multiple accept="image/*" style="display: none;">
+                <div class="mobile-upload-content">
+                    <span class="mobile-upload-icon">📷</span>
+                    <p>Adicionar Fotos</p>
                 </div>
             </div>
-            
-            <div id="image-preview" style="display: none; margin-top: 1rem;">
-                <h4>Pré-visualização das Imagens:</h4>
-                <div id="preview-container" class="photo-gallery"></div>
-            </div>
-            
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button type="submit" class="btn btn-primary">💾 Salvar Manutenção</button>
-                <a href="/manutencoes" role="button" class="btn btn-secondary">❌ Cancelar</a>
-            </div>
-        </form>
-    </div>
+            <div id="photo-preview-mobile" class="mobile-photo-preview"></div>
+        </div>
+
+        <!-- Botões Mobile -->
+        <div class="mobile-actions">
+            <button type="submit" class="btn btn-primary mobile-btn">
+                💾 Cadastrar
+            </button>
+            <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary mobile-btn">
+                ❌ Cancelar
+            </a>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== DESKTOP LAYOUT ===== */
+    @media (min-width: 1024px) {
+        .create-mobile {
+            display: none !important;
+        }
+        
+        .create-desktop {
+            display: block;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+        }
+        
+        .create-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+        
+        /* Header */
+        .create-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .header-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+        
+        .header-content h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .header-content p {
+            margin: 0;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+        }
+        
+        /* Formulário */
+        .create-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+        
+        .form-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: var(--primary-50);
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .section-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .section-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-top: var(--space-xs);
+        }
+        
+        .section-content {
+            padding: var(--space-xl);
+        }
+        
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+        
+        .form-label {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: var(--color-error);
+        }
+        
+        .form-control {
+            padding: var(--space-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            transition: border-color var(--transition);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--primary-100);
+        }
+        
+        .tipo-select {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--gray-50);
+        }
+        
+        .upload-area:hover {
+            border-color: var(--color-primary);
+            background: var(--primary-50);
+        }
+        
+        .upload-content h4 {
+            margin: var(--space-sm) 0 var(--space-xs) 0;
+            color: var(--color-text);
+        }
+        
+        .upload-content p {
+            margin: 0 0 var(--space-xs) 0;
+            color: var(--color-text-secondary);
+        }
+        
+        .upload-content small {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-xs);
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+        }
+        
+        /* Photo Preview */
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+        
+        .preview-photo {
+            position: relative;
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+        
+        .preview-photo img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        
+        .preview-photo span {
+            display: block;
+            padding: var(--space-xs);
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            text-align: center;
+            word-break: break-all;
+        }
+        
+        .remove-photo {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--color-error);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Botões */
+        .form-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            margin-top: var(--space-xl);
+        }
+        
+        .btn-large {
+            padding: var(--space-lg) var(--space-xl);
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+        }
+    }
+    
+    /* ===== MOBILE LAYOUT ===== */
+    @media (max-width: 1023px) {
+        .create-desktop {
+            display: none !important;
+        }
+        
+        .create-mobile {
+            display: block;
+            padding: var(--space-md);
+        }
+        
+        .mobile-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .mobile-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .mobile-title h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .mobile-title p {
+            margin: 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .mobile-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+        
+        .mobile-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .mobile-section h3 {
+            margin: 0 0 var(--space-md) 0;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .mobile-form-group {
+            margin-bottom: var(--space-md);
+        }
+        
+        .mobile-form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .mobile-label {
+            display: block;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .mobile-label.required::after {
+            content: " *";
+            color: var(--color-error);
+        }
+        
+        .mobile-input {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+        }
+        
+        .mobile-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .mobile-tipo-select {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .mobile-upload-area {
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            text-align: center;
+            cursor: pointer;
+            background: var(--gray-50);
+        }
+        
+        .mobile-upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .mobile-upload-icon {
+            font-size: 1.5rem;
+        }
+        
+        .mobile-photo-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+        }
+        
+        .mobile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            margin-top: var(--space-lg);
+        }
+        
+        .mobile-btn {
+            width: 100%;
+            padding: var(--space-md);
+            text-align: center;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Desktop functions
     function toggleTipoManutencao() {
         const tipo = document.getElementById('tipo').value;
         const lojaSelect = document.getElementById('loja_select');
         const veiculoSelect = document.getElementById('veiculo_select');
+        const sectionTitle = document.getElementById('section-tipo-title');
         
         if (tipo === 'loja') {
             lojaSelect.style.display = 'block';
             veiculoSelect.style.display = 'none';
-            document.getElementById('loja_id').required = true;
-            document.getElementById('veiculo_id').required = false;
+            sectionTitle.textContent = '🏪 Selecionar Loja';
         } else if (tipo === 'veiculo') {
             lojaSelect.style.display = 'none';
             veiculoSelect.style.display = 'block';
-            document.getElementById('loja_id').required = false;
-            document.getElementById('veiculo_id').required = true;
+            sectionTitle.textContent = '🚗 Selecionar Veículo';
         } else {
             lojaSelect.style.display = 'none';
             veiculoSelect.style.display = 'none';
-            document.getElementById('loja_id').required = false;
-            document.getElementById('veiculo_id').required = false;
+            sectionTitle.textContent = 'Selecione o Tipo';
         }
     }
     
-    function previewImages() {
-        const files = document.getElementById('fotos').files;
-        const previewContainer = document.getElementById('preview-container');
-        const imagePreview = document.getElementById('image-preview');
+    // Mobile functions
+    function toggleTipoManutencaoMobile() {
+        const tipo = document.getElementById('tipo_mobile').value;
+        const lojaSelect = document.getElementById('loja_select_mobile');
+        const veiculoSelect = document.getElementById('veiculo_select_mobile');
+        const sectionTitle = document.getElementById('mobile-section-tipo-title');
         
-        previewContainer.innerHTML = '';
+        if (tipo === 'loja') {
+            lojaSelect.style.display = 'block';
+            veiculoSelect.style.display = 'none';
+            sectionTitle.textContent = '🏪 Loja';
+        } else if (tipo === 'veiculo') {
+            lojaSelect.style.display = 'none';
+            veiculoSelect.style.display = 'block';
+            sectionTitle.textContent = '🚗 Veículo';
+        } else {
+            lojaSelect.style.display = 'none';
+            veiculoSelect.style.display = 'none';
+            sectionTitle.textContent = 'Selecione';
+        }
+    }
+    
+    // Photo preview functions
+    function setupPhotoPreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
         
-        if (files.length > 0) {
-            imagePreview.style.display = 'block';
+        input.addEventListener('change', function(e) {
+            preview.innerHTML = '';
+            const files = Array.from(e.target.files);
             
-            Array.from(files).forEach((file, index) => {
+            files.forEach((file, index) => {
                 if (file.type.startsWith('image/')) {
-                    // Verificar tamanho do arquivo (16MB = 16 * 1024 * 1024 bytes)
-                    if (file.size > 16 * 1024 * 1024) {
-                        alert(`Arquivo ${file.name} é muito grande. Tamanho máximo permitido: 16MB`);
-                        return;
-                    }
-                    
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        const div = document.createElement('div');
-                        div.className = 'photo-item';
-                        div.innerHTML = `
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = previewId.includes('mobile') ? 'mobile-preview-photo' : 'preview-photo';
+                        photoDiv.innerHTML = `
                             <img src="${e.target.result}" alt="Preview ${index + 1}">
-                            <div style="padding: 0.5rem; text-align: center; font-size: 0.8rem; color: #1f2937; font-weight: 600;">
-                                ${file.name}
-                                <br><small style="color: #6b7280;">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
-                            </div>
+                            <span>${file.name}</span>
+                            <button type="button" onclick="this.parentElement.remove()" class="remove-photo">×</button>
                         `;
-                        previewContainer.appendChild(div);
+                        preview.appendChild(photoDiv);
                     };
                     reader.readAsDataURL(file);
-                } else {
-                    alert(`Arquivo ${file.name} não é uma imagem válida.`);
                 }
             });
-        } else {
-            imagePreview.style.display = 'none';
-        }
+        });
     }
     
-    // Tornar a área de upload clicável
-    document.addEventListener('DOMContentLoaded', function() {
-        const fileInput = document.getElementById('fotos');
-        const uploadArea = fileInput.nextElementSibling;
+    // Drag and drop functions
+    function setupDragAndDrop(areaClass, inputId) {
+        const uploadArea = document.querySelector(areaClass);
+        const input = document.getElementById(inputId);
         
-        uploadArea.addEventListener('click', function() {
-            fileInput.click();
-        });
-        
-        // Drag and drop
         uploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
-            uploadArea.style.backgroundColor = '#e0f2fe';
-            uploadArea.style.borderColor = '#1e40af';
+            uploadArea.style.borderColor = 'var(--color-primary)';
+            uploadArea.style.background = 'var(--primary-50)';
         });
         
         uploadArea.addEventListener('dragleave', function(e) {
             e.preventDefault();
-            uploadArea.style.backgroundColor = '#f8f9fa';
-            uploadArea.style.borderColor = '#3b82f6';
+            uploadArea.style.borderColor = 'var(--color-border)';
+            uploadArea.style.background = 'var(--gray-50)';
         });
         
         uploadArea.addEventListener('drop', function(e) {
             e.preventDefault();
-            uploadArea.style.backgroundColor = '#f8f9fa';
-            uploadArea.style.borderColor = '#3b82f6';
+            uploadArea.style.borderColor = 'var(--color-border)';
+            uploadArea.style.background = 'var(--gray-50)';
             
             const files = e.dataTransfer.files;
-            fileInput.files = files;
-            previewImages();
+            input.files = files;
+            
+            // Trigger change event
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
         });
-    });
+    }
     
-    // Inicializar baseado nos parâmetros da URL
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('loja_id') || urlParams.get('veiculo_id')) {
-            toggleTipoManutencao();
-        }
+        // Setup photo previews
+        setupPhotoPreview('fotos', 'photo-preview');
+        setupPhotoPreview('fotos_mobile', 'photo-preview-mobile');
         
-        // Definir data atual como padrão
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('data_manutencao').value = today;
+        // Setup drag and drop
+        setupDragAndDrop('.upload-area', 'fotos');
+        setupDragAndDrop('.mobile-upload-area', 'fotos_mobile');
+        
+        // Sync mobile and desktop inputs
+        const desktopInputs = ['tipo', 'data_manutencao', 'titulo', 'descricao', 'preco_total', 'loja_id', 'veiculo_id'];
+        const mobileInputs = ['tipo_mobile', 'data_manutencao_mobile', 'titulo_mobile', 'descricao_mobile', 'preco_total_mobile', 'loja_id_mobile', 'veiculo_id_mobile'];
+        
+        desktopInputs.forEach((desktopId, index) => {
+            const desktopInput = document.getElementById(desktopId);
+            const mobileInput = document.getElementById(mobileInputs[index]);
+            
+            if (desktopInput && mobileInput) {
+                desktopInput.addEventListener('change', function() {
+                    mobileInput.value = this.value;
+                    if (desktopId === 'tipo') {
+                        toggleTipoManutencaoMobile();
+                    }
+                });
+                
+                mobileInput.addEventListener('change', function() {
+                    desktopInput.value = this.value;
+                    if (desktopId === 'tipo') {
+                        toggleTipoManutencao();
+                    }
+                });
+            }
+        });
+        
+        // Initialize tipo selection
+        toggleTipoManutencao();
+        toggleTipoManutencaoMobile();
     });
 </script>
 {% endblock %}
