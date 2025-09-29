@@ -1,224 +1,915 @@
 {% extends "base.html" %}
 
-{% block title %}Editar Manutenção - Sistema de Manutenção{% endblock %}
-
-{% block header_title %}Editar Manutenção{% endblock %}
+{% block title %}Editar {{ manutencao.titulo }} - Sistema de Manutenção{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="card">
-        <div class="card-header">
-            <h2>✏️ Editar Manutenção</h2>
+<!-- ===== DESKTOP LAYOUT ===== -->
+<div class="edit-desktop">
+    <div class="edit-container">
+        <!-- Header -->
+        <div class="edit-header">
+            <div class="header-icon">✏️</div>
+            <div class="header-content">
+                <h1>Editar Manutenção</h1>
+                <p>{{ manutencao.titulo }}</p>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
-                <!-- Tipo (readonly) -->
-                <div class="form-group">
-                    <label for="tipo">🏷️ Tipo de Manutenção</label>
-                    <input type="text" id="tipo" value="{% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}" readonly class="form-control">
-                </div>
 
-                <!-- Título -->
-                <div class="form-group">
-                    <label for="titulo">📝 Título *</label>
-                    <input type="text" id="titulo" name="titulo" value="{{ manutencao.titulo }}" required class="form-control">
+        <!-- Formulário Principal -->
+        <form method="POST" enctype="multipart/form-data" class="edit-form">
+            <!-- Seção 1: Informações Básicas -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>📋 Informações Básicas</h3>
                 </div>
+                <div class="section-content">
+                    <!-- Tipo (readonly) -->
+                    <div class="form-group">
+                        <label for="tipo" class="form-label">Tipo de Manutenção</label>
+                        <input type="text" id="tipo" value="{% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}" readonly class="form-control readonly">
+                    </div>
 
-                <!-- Data -->
-                <div class="form-group">
-                    <label for="data_manutencao">📅 Data da Manutenção</label>
-                    <input type="date" id="data_manutencao" name="data_manutencao" 
-                           value="{{ manutencao.data_manutencao.strftime('%Y-%m-%d') }}" class="form-control">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="titulo" class="form-label required">Título da Manutenção</label>
+                            <input type="text" id="titulo" name="titulo" value="{{ manutencao.titulo }}" required class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="data_manutencao" class="form-label">Data da Manutenção</label>
+                            <input type="date" id="data_manutencao" name="data_manutencao" 
+                                   value="{{ manutencao.data_manutencao.strftime('%Y-%m-%d') }}" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea id="descricao" name="descricao" rows="4" class="form-control" placeholder="Descreva os detalhes da manutenção...">{{ manutencao.descricao }}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="preco_total" class="form-label">Preço Total (R$)</label>
+                        <input type="number" id="preco_total" name="preco_total" step="0.01" min="0" 
+                               value="{{ manutencao.preco_total }}" class="form-control" placeholder="0.00">
+                    </div>
                 </div>
+            </div>
 
-                <!-- Loja ou Veículo -->
-                {% if manutencao.tipo == 'loja' %}
-                <div class="form-group">
-                    <label for="loja_id">🏪 Loja</label>
-                    <select id="loja_id" name="loja_id" class="form-control">
-                        <option value="">Selecione uma loja</option>
-                        {% for loja in lojas %}
-                        <option value="{{ loja.id }}" {% if manutencao.loja_id == loja.id %}selected{% endif %}>
-                            {{ loja.nome }}
-                        </option>
-                        {% endfor %}
-                    </select>
+            <!-- Seção 2: Loja ou Veículo -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>
+                        {% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}
+                    </h3>
                 </div>
-                {% else %}
-                <div class="form-group">
-                    <label for="veiculo_id">🚗 Veículo</label>
-                    <select id="veiculo_id" name="veiculo_id" class="form-control">
-                        <option value="">Selecione um veículo</option>
-                        {% for veiculo in veiculos %}
-                        <option value="{{ veiculo.id }}" {% if manutencao.veiculo_id == veiculo.id %}selected{% endif %}>
-                            {{ veiculo.placa }} - {{ veiculo.modelo }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <div class="section-content">
+                    {% if manutencao.tipo == 'loja' %}
+                    <div class="form-group">
+                        <label for="loja_id" class="form-label">Loja</label>
+                        <select id="loja_id" name="loja_id" class="form-control">
+                            <option value="">Selecione uma loja</option>
+                            {% for loja in lojas %}
+                            <option value="{{ loja.id }}" {% if manutencao.loja_id == loja.id %}selected{% endif %}>
+                                {{ loja.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                    <div class="form-group">
+                        <label for="veiculo_id" class="form-label">Veículo</label>
+                        <select id="veiculo_id" name="veiculo_id" class="form-control">
+                            <option value="">Selecione um veículo</option>
+                            {% for veiculo in veiculos %}
+                            <option value="{{ veiculo.id }}" {% if manutencao.veiculo_id == veiculo.id %}selected{% endif %}>
+                                {{ veiculo.placa }} - {{ veiculo.modelo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
+            </div>
 
-                <!-- Descrição -->
-                <div class="form-group">
-                    <label for="descricao">📄 Descrição</label>
-                    <textarea id="descricao" name="descricao" rows="4" class="form-control" placeholder="Descreva os detalhes da manutenção...">{{ manutencao.descricao }}</textarea>
+            <!-- Seção 3: Fotos Existentes -->
+            {% if manutencao.fotos %}
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>📷 Fotos Atuais</h3>
+                    <span class="section-subtitle">{{ manutencao.fotos|length }} foto(s) anexada(s)</span>
                 </div>
-
-                <!-- Preço -->
-                <div class="form-group">
-                    <label for="preco_total">💰 Preço Total (R$)</label>
-                    <input type="number" id="preco_total" name="preco_total" step="0.01" min="0" 
-                           value="{{ manutencao.preco_total }}" class="form-control" placeholder="0.00">
-                </div>
-
-                <!-- Fotos Existentes -->
-                {% if manutencao.fotos %}
-                <div class="form-group">
-                    <label>📷 Fotos Atuais</label>
+                <div class="section-content">
                     <div class="existing-photos">
                         {% for foto in manutencao.fotos %}
                         <div class="photo-item">
-                            <img src="/uploads/{{ foto.nome_arquivo }}" alt="Foto {{ loop.index }}" class="existing-photo">
-                            <span class="photo-name">{{ foto.nome_arquivo }}</span>
+                            <img src="{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}" 
+                                 alt="Foto {{ loop.index }}" 
+                                 onclick="openImageModal('{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}')"
+                                 class="existing-photo">
+                            <div class="photo-info">
+                                <span class="photo-name">{{ foto.nome_arquivo }}</span>
+                                <span class="photo-date">{{ foto.data_upload.strftime('%d/%m/%Y %H:%M') }}</span>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
-                    <small class="text-muted">As fotos atuais serão mantidas. Para adicionar novas fotos, use o campo abaixo.</small>
+                    <div class="info-message">
+                        <span class="info-icon">ℹ️</span>
+                        <span>As fotos atuais serão mantidas. Use o campo abaixo para adicionar novas fotos.</span>
+                    </div>
                 </div>
-                {% endif %}
+            </div>
+            {% endif %}
 
-                <!-- Novas Fotos -->
-                <div class="form-group">
-                    <label for="fotos">📷 Adicionar Novas Fotos</label>
+            <!-- Seção 4: Novas Fotos -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>📷 Adicionar Novas Fotos</h3>
+                    <span class="section-subtitle">Opcional - Adicione fotos adicionais</span>
+                </div>
+                <div class="section-content">
                     <div class="upload-area" onclick="document.getElementById('fotos').click()">
                         <input type="file" id="fotos" name="fotos" multiple accept="image/*" style="display: none;">
                         <div class="upload-content">
-                            <span class="upload-icon">📷</span>
-                            <p>Clique para adicionar fotos ou arraste aqui</p>
+                            <div class="upload-icon">📷</div>
+                            <h4>Adicionar Fotos</h4>
+                            <p>Clique para selecionar ou arraste as fotos aqui</p>
                             <small>Formatos: JPG, PNG, GIF (máx. 5MB cada)</small>
                         </div>
                     </div>
                     <div id="photo-preview" class="photo-preview"></div>
                 </div>
+            </div>
 
-                <!-- Botões -->
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        💾 Salvar Alterações
-                    </button>
-                    <a href="{{ url_for('detalhes_manutencao', manutencao_id=manutencao.id) }}" class="btn btn-secondary">
-                        ❌ Cancelar
-                    </a>
-                    <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary">
-                        📋 Voltar para Lista
-                    </a>
-                </div>
-            </form>
+            <!-- Botões de Ação -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">
+                    💾 Salvar Alterações
+                </button>
+                <a href="{{ url_for('detalhes_manutencao', manutencao_id=manutencao.id) }}" class="btn btn-secondary btn-large">
+                    ❌ Cancelar
+                </a>
+                <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary btn-large">
+                    📋 Voltar para Lista
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== MOBILE LAYOUT ===== -->
+<div class="edit-mobile">
+    <div class="mobile-header">
+        <div class="mobile-icon">✏️</div>
+        <div class="mobile-title">
+            <h1>Editar Manutenção</h1>
+            <p>{{ manutencao.titulo }}</p>
         </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="mobile-form">
+        <!-- Informações Básicas -->
+        <div class="mobile-section">
+            <h3>📋 Básico</h3>
+            <div class="mobile-form-group">
+                <label for="tipo_mobile" class="mobile-label">Tipo</label>
+                <input type="text" id="tipo_mobile" value="{% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}" readonly class="mobile-input readonly">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label for="titulo_mobile" class="mobile-label required">Título</label>
+                <input type="text" id="titulo_mobile" name="titulo" value="{{ manutencao.titulo }}" required class="mobile-input">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label for="data_manutencao_mobile" class="mobile-label">Data</label>
+                <input type="date" id="data_manutencao_mobile" name="data_manutencao" 
+                       value="{{ manutencao.data_manutencao.strftime('%Y-%m-%d') }}" class="mobile-input">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label for="descricao_mobile" class="mobile-label">Descrição</label>
+                <textarea id="descricao_mobile" name="descricao" rows="3" class="mobile-input">{{ manutencao.descricao }}</textarea>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label for="preco_total_mobile" class="mobile-label">Preço (R$)</label>
+                <input type="number" id="preco_total_mobile" name="preco_total" step="0.01" min="0" 
+                       value="{{ manutencao.preco_total }}" class="mobile-input" placeholder="0.00">
+            </div>
+        </div>
+
+        <!-- Loja/Veículo -->
+        <div class="mobile-section">
+            <h3>
+                {% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}
+            </h3>
+            {% if manutencao.tipo == 'loja' %}
+            <div class="mobile-form-group">
+                <label for="loja_id_mobile" class="mobile-label">Loja</label>
+                <select id="loja_id_mobile" name="loja_id" class="mobile-input">
+                    <option value="">Selecione uma loja</option>
+                    {% for loja in lojas %}
+                    <option value="{{ loja.id }}" {% if manutencao.loja_id == loja.id %}selected{% endif %}>
+                        {{ loja.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <div class="mobile-form-group">
+                <label for="veiculo_id_mobile" class="mobile-label">Veículo</label>
+                <select id="veiculo_id_mobile" name="veiculo_id" class="mobile-input">
+                    <option value="">Selecione um veículo</option>
+                    {% for veiculo in veiculos %}
+                    <option value="{{ veiculo.id }}" {% if manutencao.veiculo_id == veiculo.id %}selected{% endif %}>
+                        {{ veiculo.placa }} - {{ veiculo.modelo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Fotos Existentes Mobile -->
+        {% if manutencao.fotos %}
+        <div class="mobile-section">
+            <h3>📷 Fotos Atuais ({{ manutencao.fotos|length }})</h3>
+            <div class="mobile-existing-photos">
+                {% for foto in manutencao.fotos %}
+                <div class="mobile-photo-item">
+                    <img src="{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}" 
+                         alt="Foto {{ loop.index }}" 
+                         onclick="openImageModal('{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}')"
+                         class="mobile-existing-photo">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Novas Fotos Mobile -->
+        <div class="mobile-section">
+            <h3>📷 Adicionar Fotos</h3>
+            <div class="mobile-upload-area" onclick="document.getElementById('fotos_mobile').click()">
+                <input type="file" id="fotos_mobile" name="fotos" multiple accept="image/*" style="display: none;">
+                <div class="mobile-upload-content">
+                    <span class="mobile-upload-icon">📷</span>
+                    <p>Adicionar Fotos</p>
+                </div>
+            </div>
+            <div id="photo-preview-mobile" class="mobile-photo-preview"></div>
+        </div>
+
+        <!-- Botões Mobile -->
+        <div class="mobile-actions">
+            <button type="submit" class="btn btn-primary mobile-btn">
+                💾 Salvar
+            </button>
+            <a href="{{ url_for('detalhes_manutencao', manutencao_id=manutencao.id) }}" class="btn btn-secondary mobile-btn">
+                ❌ Cancelar
+            </a>
+            <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary mobile-btn">
+                📋 Voltar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Modal para visualizar imagem -->
+<div id="imageModal" class="image-modal">
+    <div class="modal-content">
+        <img id="modalImage" class="modal-image">
+        <button onclick="closeImageModal()" class="modal-close">&times;</button>
     </div>
 </div>
 
 {% block extra_css %}
 <style>
-    .existing-photos {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: var(--space-md);
-        margin-bottom: var(--space-md);
-    }
-
-    .photo-item {
-        text-align: center;
-        background: var(--gray-50);
-        border-radius: var(--radius-md);
-        padding: var(--space-sm);
-        border: 1px solid var(--color-border);
-    }
-
-    .existing-photo {
-        width: 100%;
-        height: 80px;
-        object-fit: cover;
-        border-radius: var(--radius-sm);
-        margin-bottom: var(--space-xs);
-    }
-
-    .photo-name {
-        font-size: var(--font-size-xs);
-        color: var(--color-text-secondary);
-        word-break: break-all;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: var(--space-md);
-        flex-wrap: wrap;
-        margin-top: var(--space-lg);
-    }
-
-    @media (max-width: 768px) {
-        .form-actions {
-            flex-direction: column;
+    /* ===== DESKTOP LAYOUT ===== */
+    @media (min-width: 1024px) {
+        .edit-mobile {
+            display: none !important;
         }
         
-        .existing-photos {
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        .edit-desktop {
+            display: block;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: var(--space-xl);
         }
+        
+        .edit-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+        
+        /* Header */
+        .edit-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .header-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+        
+        .header-content h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .header-content p {
+            margin: 0;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+        }
+        
+        /* Formulário */
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+        
+        .form-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: var(--primary-50);
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .section-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .section-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-top: var(--space-xs);
+        }
+        
+        .section-content {
+            padding: var(--space-xl);
+        }
+        
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+        
+        .form-label {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: var(--color-error);
+        }
+        
+        .form-control {
+            padding: var(--space-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            transition: border-color var(--transition);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--primary-100);
+        }
+        
+        .form-control.readonly {
+            background-color: var(--gray-50);
+            color: var(--color-text-secondary);
+            cursor: not-allowed;
+        }
+        
+        /* Fotos Existentes */
+        .existing-photos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .photo-item {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            transition: transform var(--transition);
+        }
+        
+        .photo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .existing-photo {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        .photo-info {
+            padding: var(--space-sm);
+            text-align: center;
+        }
+        
+        .photo-name {
+            display: block;
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            word-break: break-all;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .photo-date {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+        
+        .info-message {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md);
+            background: var(--info-50);
+            border: 1px solid var(--info-200);
+            border-radius: var(--radius-md);
+            color: var(--info-700);
+            font-size: var(--font-size-sm);
+        }
+        
+        .info-icon {
+            font-size: var(--font-size-base);
+        }
+        
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--gray-50);
+        }
+        
+        .upload-area:hover {
+            border-color: var(--color-primary);
+            background: var(--primary-50);
+        }
+        
+        .upload-content h4 {
+            margin: var(--space-sm) 0 var(--space-xs) 0;
+            color: var(--color-text);
+        }
+        
+        .upload-content p {
+            margin: 0 0 var(--space-xs) 0;
+            color: var(--color-text-secondary);
+        }
+        
+        .upload-content small {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-xs);
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+        }
+        
+        /* Photo Preview */
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+        
+        .preview-photo {
+            position: relative;
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+        
+        .preview-photo img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        
+        .preview-photo span {
+            display: block;
+            padding: var(--space-xs);
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            text-align: center;
+            word-break: break-all;
+        }
+        
+        .remove-photo {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--color-error);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Botões */
+        .form-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            margin-top: var(--space-xl);
+        }
+        
+        .btn-large {
+            padding: var(--space-lg) var(--space-xl);
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+        }
+    }
+    
+    /* ===== MOBILE LAYOUT ===== */
+    @media (max-width: 1023px) {
+        .edit-desktop {
+            display: none !important;
+        }
+        
+        .edit-mobile {
+            display: block;
+            padding: var(--space-md);
+        }
+        
+        .mobile-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .mobile-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .mobile-title h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .mobile-title p {
+            margin: 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .mobile-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+        
+        .mobile-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .mobile-section h3 {
+            margin: 0 0 var(--space-md) 0;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .mobile-form-group {
+            margin-bottom: var(--space-md);
+        }
+        
+        .mobile-form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .mobile-label {
+            display: block;
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .mobile-label.required::after {
+            content: " *";
+            color: var(--color-error);
+        }
+        
+        .mobile-input {
+            width: 100%;
+            padding: var(--space-md);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+        }
+        
+        .mobile-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+        
+        .mobile-input.readonly {
+            background-color: var(--gray-50);
+            color: var(--color-text-secondary);
+        }
+        
+        /* Fotos Existentes Mobile */
+        .mobile-existing-photos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-sm);
+        }
+        
+        .mobile-photo-item {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+        
+        .mobile-existing-photo {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        /* Upload Mobile */
+        .mobile-upload-area {
+            border: 2px dashed var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            text-align: center;
+            cursor: pointer;
+            background: var(--gray-50);
+        }
+        
+        .mobile-upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+        
+        .mobile-upload-icon {
+            font-size: 1.5rem;
+        }
+        
+        .mobile-photo-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+        }
+        
+        .mobile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            margin-top: var(--space-lg);
+        }
+        
+        .mobile-btn {
+            width: 100%;
+            padding: var(--space-md);
+            text-align: center;
+        }
+    }
+    
+    /* ===== MODAL DE IMAGEM ===== */
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+    }
+    
+    .modal-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-image {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+    }
+    
+    .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 35px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .modal-close:hover {
+        opacity: 0.7;
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Preview de fotos
-    document.getElementById('fotos').addEventListener('change', function(e) {
-        const preview = document.getElementById('photo-preview');
-        preview.innerHTML = '';
+    // Modal functions
+    function openImageModal(imageSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.style.display = 'block';
+        modalImg.src = imageSrc;
+    }
+    
+    function closeImageModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+    
+    // Photo preview functions
+    function setupPhotoPreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
         
-        const files = Array.from(e.target.files);
+        if (!input || !preview) return;
         
-        files.forEach((file, index) => {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const photoDiv = document.createElement('div');
-                    photoDiv.className = 'preview-photo';
-                    photoDiv.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview ${index + 1}">
-                        <span>${file.name}</span>
-                        <button type="button" onclick="this.parentElement.remove()" class="remove-photo">×</button>
-                    `;
-                    preview.appendChild(photoDiv);
-                };
-                reader.readAsDataURL(file);
+        input.addEventListener('change', function(e) {
+            preview.innerHTML = '';
+            const files = Array.from(e.target.files);
+            
+            files.forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = previewId.includes('mobile') ? 'mobile-preview-photo' : 'preview-photo';
+                        photoDiv.innerHTML = `
+                            <img src="${e.target.result}" alt="Preview ${index + 1}">
+                            <span>${file.name}</span>
+                            <button type="button" onclick="this.parentElement.remove()" class="remove-photo">×</button>
+                        `;
+                        preview.appendChild(photoDiv);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    }
+    
+    // Drag and drop functions
+    function setupDragAndDrop(areaClass, inputId) {
+        const uploadArea = document.querySelector(areaClass);
+        const input = document.getElementById(inputId);
+        
+        if (!uploadArea || !input) return;
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--color-primary)';
+            uploadArea.style.background = 'var(--primary-50)';
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--color-border)';
+            uploadArea.style.background = 'var(--gray-50)';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--color-border)';
+            uploadArea.style.background = 'var(--gray-50)';
+            
+            const files = e.dataTransfer.files;
+            input.files = files;
+            
+            // Trigger change event
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+        });
+    }
+    
+    // Sync mobile and desktop inputs
+    function syncInputs() {
+        const desktopInputs = ['titulo', 'data_manutencao', 'descricao', 'preco_total', 'loja_id', 'veiculo_id'];
+        const mobileInputs = ['titulo_mobile', 'data_manutencao_mobile', 'descricao_mobile', 'preco_total_mobile', 'loja_id_mobile', 'veiculo_id_mobile'];
+        
+        desktopInputs.forEach((desktopId, index) => {
+            const desktopInput = document.getElementById(desktopId);
+            const mobileInput = document.getElementById(mobileInputs[index]);
+            
+            if (desktopInput && mobileInput) {
+                desktopInput.addEventListener('change', function() {
+                    mobileInput.value = this.value;
+                });
+                
+                mobileInput.addEventListener('change', function() {
+                    desktopInput.value = this.value;
+                });
             }
         });
-    });
-
-    // Drag and drop
-    const uploadArea = document.querySelector('.upload-area');
+    }
     
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadArea.style.background = 'var(--primary-50)';
-    });
-    
-    uploadArea.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        uploadArea.style.background = '';
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadArea.style.background = '';
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup photo previews
+        setupPhotoPreview('fotos', 'photo-preview');
+        setupPhotoPreview('fotos_mobile', 'photo-preview-mobile');
         
-        const files = e.dataTransfer.files;
-        document.getElementById('fotos').files = files;
+        // Setup drag and drop
+        setupDragAndDrop('.upload-area', 'fotos');
+        setupDragAndDrop('.mobile-upload-area', 'fotos_mobile');
         
-        // Trigger change event
-        const event = new Event('change', { bubbles: true });
-        document.getElementById('fotos').dispatchEvent(event);
+        // Sync inputs
+        syncInputs();
+    });
+    
+    // Fechar modal clicando fora da imagem
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+    
+    // Fechar modal com tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
     });
 </script>
 {% endblock %}
+
 {% endblock %}
