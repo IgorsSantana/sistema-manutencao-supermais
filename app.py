@@ -174,9 +174,11 @@ class FotoManutencao(db.Model):
         """Retorna a URL da imagem (Cloudinary ou local)"""
         if self.cloudinary_secure_url:
             return self.cloudinary_secure_url
-        elif self.caminho_arquivo:
+        elif self.caminho_arquivo and os.path.exists(self.caminho_arquivo):
             return url_for('uploaded_file', filename=self.nome_arquivo)
-        return None
+        else:
+            # Para fotos antigas que não existem mais, retornar placeholder
+            return url_for('static', filename='images/placeholder.jpg')
     
     def __repr__(self):
         return f'<FotoManutencao {self.nome_arquivo}>'
@@ -407,8 +409,12 @@ def detalhes_manutencao(manutencao_id):
     if manutencao.fotos:
         for i, foto in enumerate(manutencao.fotos):
             print(f"   - Foto {i+1}: {foto.nome_arquivo}")
-            print(f"     Caminho: {foto.caminho_arquivo}")
-            print(f"     Existe arquivo: {os.path.exists(foto.caminho_arquivo)}")
+            if foto.caminho_arquivo:
+                print(f"     Caminho local: {foto.caminho_arquivo}")
+                print(f"     Existe arquivo: {os.path.exists(foto.caminho_arquivo)}")
+            if foto.cloudinary_secure_url:
+                print(f"     URL Cloudinary: {foto.cloudinary_secure_url}")
+            print(f"     URL final: {foto.get_url()}")
     
     return render_template('detalhes_manutencao.html', manutencao=manutencao)
 
