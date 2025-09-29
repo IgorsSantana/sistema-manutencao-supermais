@@ -414,7 +414,7 @@
         /* Grid de Manutenções */
         .maintenances-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
             gap: var(--space-lg);
         }
         
@@ -523,7 +523,7 @@
         .maintenance-actions {
             display: flex;
             gap: var(--space-sm);
-            align-items: center;
+            /*align-items: center;*/
             justify-content: flex-end;
         }
         
@@ -581,8 +581,8 @@
         
         .maintenance-actions .btn-error {
             background-color: var(--color-error);
-            color: var(--color-surface);
-            border-color: var(--color-error);
+            color: #000000;
+            border-color: var(--color-border);
         }
         
         .maintenance-actions .btn-error:hover {
@@ -803,6 +803,7 @@
         
         .mobile-card-actions {
             display: flex;
+            flex-direction: column;
             gap: var(--space-2);
             padding: var(--space-md);
             background: var(--gray-50);
@@ -863,8 +864,8 @@
         
         .mobile-card-actions .btn-error {
             background-color: var(--color-error);
-            color: var(--color-surface);
-            border-color: var(--color-error);
+            color: #000000;
+            border-color: var(--color-border);
         }
         
         .mobile-card-actions .btn-error:hover {
