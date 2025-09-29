@@ -3,157 +3,741 @@
 {% block title %}Manutenções - Sistema de Manutenção{% endblock %}
 
 {% block content %}
-<!-- Enhanced Main Card -->
-<div class="card">
-    <div class="card-header">
-        <span class="card-header-icon">🔧</span>
-        <h3>Manutenções Realizadas</h3>
-        {% if manutencoes %}<span class="badge">{{ manutencoes|length }}</span>{% endif %}
-    </div>
-    <div class="card-body">
-        <!-- Enhanced Filters -->
-        <div class="filters-section mb-4">
-            <div class="filter-options">
+<!-- ===== DESKTOP LAYOUT ===== -->
+<div class="maintenances-desktop">
+    <div class="maintenances-container">
+        <!-- Header -->
+        <div class="maintenances-header">
+            <div class="header-content">
+                <div class="header-icon">🔧</div>
+                <div class="header-text">
+                    <h1>Manutenções Realizadas</h1>
+                    <p>Gerencie todas as manutenções do sistema</p>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ manutencoes|length }}</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="filters-section">
+            <div class="filters-header">
+                <h3>Filtros</h3>
+                <div class="filters-actions">
+                    <a href="/manutencoes/cadastrar" class="btn btn-primary">
+                        ➕ Nova Manutenção
+                    </a>
+                </div>
+            </div>
+            
+            <div class="filters-content">
                 <div class="filter-tabs">
                     <a href="/manutencoes" class="filter-tab {% if tipo_atual == 'todas' %}active{% endif %}">
                         <span class="filter-icon">🔧</span>
                         <span>Todas</span>
+                        <span class="filter-count">{{ manutencoes|length }}</span>
                     </a>
                     <a href="/manutencoes?tipo=loja" class="filter-tab {% if tipo_atual == 'loja' %}active{% endif %}">
                         <span class="filter-icon">🏪</span>
                         <span>Lojas</span>
+                        <span class="filter-count">{{ manutencoes|selectattr('tipo', 'equalto', 'loja')|list|length }}</span>
                     </a>
                     <a href="/manutencoes?tipo=veiculo" class="filter-tab {% if tipo_atual == 'veiculo' %}active{% endif %}">
                         <span class="filter-icon">🚗</span>
                         <span>Veículos</span>
+                        <span class="filter-count">{{ manutencoes|selectattr('tipo', 'equalto', 'veiculo')|list|length }}</span>
                     </a>
-                    <a href="/manutencoes/cadastrar" class="filter-tab primary">
-                        <span class="filter-icon">➕</span>
-                        <span>Nova</span>
-                    </a>
-                </div>
-                <div class="filter-info">
-                    <span class="filter-count">{{ manutencoes|length }} manutenção(ões) encontrada(s)</span>
                 </div>
             </div>
         </div>
-        
+
+        <!-- Lista de Manutenções -->
         {% if not manutencoes %}
-            <div class="empty-state">
-                <div class="empty-state-icon">🔧</div>
-                <h4>Nenhuma manutenção registrada</h4>
-                <p>Comece registrando a primeira manutenção do sistema.</p>
-                <a href="/manutencoes/cadastrar" role="button" class="btn btn-primary">Registrar Primeira Manutenção</a>
-            </div>
+        <div class="empty-state">
+            <div class="empty-icon">🔧</div>
+            <h3>Nenhuma manutenção registrada</h3>
+            <p>Comece registrando a primeira manutenção do sistema.</p>
+            <a href="/manutencoes/cadastrar" class="btn btn-primary btn-large">
+                ➕ Registrar Primeira Manutenção
+            </a>
+        </div>
         {% else %}
-            <!-- Enhanced Maintenance List -->
-            <div class="maintenance-list">
-                {% for manutencao in manutencoes %}
-                    <div class="maintenance-card {{ manutencao.tipo }}">
-                        <div class="maintenance-header">
-                            <div class="maintenance-icon">
-                                {% if manutencao.tipo == 'loja' %}🏪{% else %}🚗{% endif %}
-                            </div>
-                            <div class="maintenance-info">
-                                <h4>{{ manutencao.titulo }}</h4>
-                                <p class="date">
-                                    📅 {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}
-                                    {% if manutencao.tipo == 'loja' and manutencao.loja %}
-                                        • 🏪 {{ manutencao.loja.nome }}
-                                    {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
-                                        • 🚗 {{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}
-                                    {% endif %}
-                                </p>
-                                {% if manutencao.descricao %}
-                                    <p class="maintenance-description">
-                                        {{ manutencao.descricao[:150] }}{% if manutencao.descricao|length > 150 %}...{% endif %}
-                                    </p>
-                                {% endif %}
-                                {% if manutencao.fotos %}
-                                    <div class="maintenance-badges">
-                                        <span class="info-badge">
-                                            📷 {{ manutencao.fotos|length }} foto(s)
-                                        </span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="maintenance-footer">
-                            <div class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
-                            <div class="maintenance-actions">
-                                <a href="/manutencoes/{{ manutencao.id }}" role="button" class="btn btn-secondary btn-sm">
-                                    👁️ Ver
-                                </a>
-                                <a href="/manutencoes/{{ manutencao.id }}/editar" role="button" class="btn btn-primary btn-sm">
-                                    ✏️ Editar
-                                </a>
-                                <form method="POST" action="/manutencoes/{{ manutencao.id }}/apagar" style="display: inline;" 
-                                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção? Esta ação não pode ser desfeita.')">
-                                    <button type="submit" class="btn btn-error btn-sm">
-                                        🗑️ Apagar
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+        <div class="maintenances-grid">
+            {% for manutencao in manutencoes %}
+            <div class="maintenance-card">
+                <div class="card-header">
+                    <div class="maintenance-type">
+                        {% if manutencao.tipo == 'loja' %}🏪{% else %}🚗{% endif %}
                     </div>
-                {% endfor %}
+                    <div class="maintenance-meta">
+                        <span class="maintenance-date">{{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</span>
+                        <span class="maintenance-status">
+                            {% if manutencao.tipo == 'loja' %}Loja{% else %}Veículo{% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <h3 class="maintenance-title">{{ manutencao.titulo }}</h3>
+                    
+                    {% if manutencao.descricao %}
+                    <p class="maintenance-description">{{ manutencao.descricao[:100] }}{% if manutencao.descricao|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                    
+                    <div class="maintenance-info">
+                        {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                        <div class="info-item">
+                            <span class="info-label">Loja:</span>
+                            <span class="info-value">{{ manutencao.loja.nome }}</span>
+                        </div>
+                        {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                        <div class="info-item">
+                            <span class="info-label">Veículo:</span>
+                            <span class="info-value">{{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if manutencao.fotos %}
+                        <div class="info-item">
+                            <span class="info-label">Fotos:</span>
+                            <span class="info-value">{{ manutencao.fotos|length }} anexada(s)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="maintenance-price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
+                    <div class="maintenance-actions">
+                        <a href="/manutencoes/{{ manutencao.id }}" class="btn btn-secondary btn-sm">
+                            👁️ Ver
+                        </a>
+                        <a href="/manutencoes/{{ manutencao.id }}/editar" class="btn btn-primary btn-sm">
+                            ✏️ Editar
+                        </a>
+                        <form method="POST" action="/manutencoes/{{ manutencao.id }}/apagar" style="display: inline;" 
+                              onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção? Esta ação não pode ser desfeita.')">
+                            <button type="submit" class="btn btn-error btn-sm">
+                                🗑️ Apagar
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+        </div>
         {% endif %}
     </div>
 </div>
 
+<!-- ===== MOBILE LAYOUT ===== -->
+<div class="maintenances-mobile">
+    <div class="mobile-header">
+        <div class="mobile-icon">🔧</div>
+        <div class="mobile-title">
+            <h1>Manutenções</h1>
+            <p>{{ manutencoes|length }} registrada(s)</p>
+        </div>
+        <div class="mobile-actions">
+            <a href="/manutencoes/cadastrar" class="btn btn-primary mobile-btn-sm">
+                ➕ Nova
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros Mobile -->
+    <div class="mobile-filters">
+        <div class="mobile-filter-tabs">
+            <a href="/manutencoes" class="mobile-filter-tab {% if tipo_atual == 'todas' %}active{% endif %}">
+                <span class="filter-icon">🔧</span>
+                <span>Todas</span>
+            </a>
+            <a href="/manutencoes?tipo=loja" class="mobile-filter-tab {% if tipo_atual == 'loja' %}active{% endif %}">
+                <span class="filter-icon">🏪</span>
+                <span>Lojas</span>
+            </a>
+            <a href="/manutencoes?tipo=veiculo" class="mobile-filter-tab {% if tipo_atual == 'veiculo' %}active{% endif %}">
+                <span class="filter-icon">🚗</span>
+                <span>Veículos</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista Mobile -->
+    {% if not manutencoes %}
+    <div class="mobile-empty-state">
+        <div class="empty-icon">🔧</div>
+        <h3>Nenhuma manutenção</h3>
+        <p>Registre a primeira manutenção</p>
+        <a href="/manutencoes/cadastrar" class="btn btn-primary mobile-btn">
+            ➕ Nova Manutenção
+        </a>
+    </div>
+    {% else %}
+    <div class="mobile-maintenances">
+        {% for manutencao in manutencoes %}
+        <div class="mobile-maintenance-card">
+            <div class="mobile-card-header">
+                <div class="mobile-maintenance-type">
+                    {% if manutencao.tipo == 'loja' %}🏪{% else %}🚗{% endif %}
+                </div>
+                <div class="mobile-maintenance-meta">
+                    <span class="mobile-date">{{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</span>
+                    <span class="mobile-price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</span>
+                </div>
+            </div>
+            
+            <div class="mobile-card-content">
+                <h3 class="mobile-maintenance-title">{{ manutencao.titulo }}</h3>
+                
+                {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                <p class="mobile-maintenance-location">🏪 {{ manutencao.loja.nome }}</p>
+                {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                <p class="mobile-maintenance-location">🚗 {{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}</p>
+                {% endif %}
+                
+                {% if manutencao.fotos %}
+                <p class="mobile-maintenance-photos">📷 {{ manutencao.fotos|length }} foto(s)</p>
+                {% endif %}
+            </div>
+            
+            <div class="mobile-card-actions">
+                <a href="/manutencoes/{{ manutencao.id }}" class="btn btn-secondary mobile-btn-sm">
+                    👁️ Ver
+                </a>
+                <a href="/manutencoes/{{ manutencao.id }}/editar" class="btn btn-primary mobile-btn-sm">
+                    ✏️ Editar
+                </a>
+                <form method="POST" action="/manutencoes/{{ manutencao.id }}/apagar" style="display: inline;" 
+                      onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção?')">
+                    <button type="submit" class="btn btn-error mobile-btn-sm">
+                        🗑️ Apagar
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
 {% block extra_css %}
 <style>
-    .maintenance-actions {
-        display: flex;
-        gap: var(--space-xs);
-        flex-wrap: wrap;
-        align-items: center;
-    }
-    
-    .maintenance-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: var(--space-sm);
-    }
-    
-    .btn-sm {
-        padding: var(--space-xs) var(--space-sm);
-        font-size: var(--font-size-xs);
-        border-radius: var(--radius-sm);
-    }
-    
-    @media (max-width: 768px) {
-        .maintenance-footer {
+    /* ===== DESKTOP LAYOUT ===== */
+    @media (min-width: 1024px) {
+        .maintenances-mobile {
+            display: none !important;
+        }
+        
+        .maintenances-desktop {
+            display: block;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+        }
+        
+        .maintenances-container {
+            display: flex;
             flex-direction: column;
-            align-items: stretch;
+            gap: var(--space-xl);
+        }
+        
+        /* Header */
+        .maintenances-header {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+        
+        .header-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+        
+        .header-text {
+            flex: 1;
+        }
+        
+        .header-text h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .header-text p {
+            margin: 0;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: var(--space-lg);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            display: block;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+        
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        /* Filtros */
+        .filters-section {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-lg);
+            background: var(--primary-50);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .filters-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .filters-content {
+            padding: var(--space-lg);
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--gray-50);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition);
+        }
+        
+        .filter-tab:hover {
+            background: var(--gray-100);
+            border-color: var(--color-primary);
+        }
+        
+        .filter-tab.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+        
+        .filter-icon {
+            font-size: var(--font-size-base);
+        }
+        
+        .filter-count {
+            background: var(--gray-200);
+            color: var(--color-text-secondary);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        .filter-tab.active .filter-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-4xl);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .empty-state h3 {
+            margin: 0 0 var(--space-md) 0;
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .empty-state p {
+            margin: 0 0 var(--space-xl) 0;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+        }
+        
+        /* Grid de Manutenções */
+        .maintenances-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: var(--space-lg);
+        }
+        
+        .maintenance-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+            transition: transform var(--transition);
+        }
+        
+        .maintenance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-lg);
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .maintenance-type {
+            font-size: 1.5rem;
+        }
+        
+        .maintenance-meta {
+            text-align: right;
+        }
+        
+        .maintenance-date {
+            display: block;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .maintenance-status {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        .card-content {
+            padding: var(--space-lg);
+        }
+        
+        .maintenance-title {
+            margin: 0 0 var(--space-md) 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .maintenance-description {
+            margin: 0 0 var(--space-md) 0;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+        
+        .maintenance-info {
+            display: flex;
+            flex-direction: column;
             gap: var(--space-sm);
         }
         
-        .maintenance-actions {
-            justify-content: center;
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .price {
-            text-align: center;
+        .info-label {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+        
+        .info-value {
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+        }
+        
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-lg);
+            background: var(--gray-50);
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .maintenance-price {
             font-size: var(--font-size-lg);
             font-weight: var(--font-weight-bold);
             color: var(--color-primary);
         }
-    }
-    
-    @media (max-width: 480px) {
+        
         .maintenance-actions {
-            flex-direction: column;
+            display: flex;
+            gap: var(--space-xs);
+            flex-wrap: wrap;
         }
         
-        .maintenance-actions .btn {
-            width: 100%;
+        .btn-sm {
+            padding: var(--space-xs) var(--space-sm);
+            font-size: var(--font-size-xs);
+            border-radius: var(--radius-sm);
+        }
+    }
+    
+    /* ===== MOBILE LAYOUT ===== */
+    @media (max-width: 1023px) {
+        .maintenances-desktop {
+            display: none !important;
+        }
+        
+        .maintenances-mobile {
+            display: block;
+            padding: var(--space-md);
+        }
+        
+        .mobile-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .mobile-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .mobile-title {
+            flex: 1;
+        }
+        
+        .mobile-title h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .mobile-title p {
+            margin: 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .mobile-actions {
+            flex-shrink: 0;
+        }
+        
+        .mobile-btn-sm {
+            padding: var(--space-sm) var(--space-md);
+            font-size: var(--font-size-xs);
+        }
+        
+        /* Filtros Mobile */
+        .mobile-filters {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .mobile-filter-tabs {
+            display: flex;
+            gap: var(--space-xs);
+            overflow-x: auto;
+            padding-bottom: var(--space-xs);
+        }
+        
+        .mobile-filter-tab {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--gray-50);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--color-text);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            white-space: nowrap;
+            transition: all var(--transition);
+        }
+        
+        .mobile-filter-tab:hover {
+            background: var(--gray-100);
+        }
+        
+        .mobile-filter-tab.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+        
+        .filter-icon {
+            font-size: var(--font-size-sm);
+        }
+        
+        /* Empty State Mobile */
+        .mobile-empty-state {
             text-align: center;
+            padding: var(--space-2xl);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .mobile-empty-state h3 {
+            margin: 0 0 var(--space-md) 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .mobile-empty-state p {
+            margin: 0 0 var(--space-lg) 0;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+        
+        /* Lista Mobile */
+        .mobile-maintenances {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+        
+        .mobile-maintenance-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .mobile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md);
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .mobile-maintenance-type {
+            font-size: 1.25rem;
+        }
+        
+        .mobile-maintenance-meta {
+            text-align: right;
+        }
+        
+        .mobile-date {
+            display: block;
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .mobile-price {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+        
+        .mobile-card-content {
+            padding: var(--space-md);
+        }
+        
+        .mobile-maintenance-title {
+            margin: 0 0 var(--space-sm) 0;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .mobile-maintenance-location {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .mobile-maintenance-photos {
+            margin: 0;
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+        
+        .mobile-card-actions {
+            display: flex;
+            gap: var(--space-xs);
+            padding: var(--space-md);
+            background: var(--gray-50);
+            border-top: 1px solid var(--color-border);
+            overflow-x: auto;
+        }
+        
+        .mobile-btn-sm {
+            padding: var(--space-xs) var(--space-sm);
+            font-size: var(--font-size-xs);
+            white-space: nowrap;
         }
     }
 </style>
-{% endblock %}
 {% endblock %}
