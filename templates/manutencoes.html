@@ -522,25 +522,91 @@
         
         .maintenance-actions {
             display: flex;
-            gap: var(--space-xs);
-            flex-wrap: wrap;
+            gap: var(--space-sm);
             align-items: center;
+            justify-content: flex-end;
         }
         
         .maintenance-actions .btn {
-            flex: 1;
-            min-width: 0;
-            padding: var(--space-sm) var(--space-md);
-            font-size: var(--font-size-xs);
-            border-radius: var(--radius-sm);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
+            padding: var(--space-2) var(--space-3);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            border-radius: var(--radius-md);
             text-align: center;
             white-space: nowrap;
+            min-width: 80px;
+            height: 36px;
+            transition: all var(--transition);
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .maintenance-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .maintenance-actions .btn:active {
+            transform: translateY(0);
+        }
+        
+        .maintenance-actions .btn-secondary {
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            border-color: var(--color-border);
+        }
+        
+        .maintenance-actions .btn-secondary:hover {
+            background-color: var(--gray-100);
+            color: var(--color-text);
+            border-color: var(--gray-300);
+        }
+        
+        .maintenance-actions .btn-primary {
+            background-color: var(--color-primary);
+            color: var(--color-surface);
+            border-color: var(--color-primary);
+        }
+        
+        .maintenance-actions .btn-primary:hover {
+            background-color: var(--primary-700);
+            border-color: var(--primary-700);
+            color: var(--color-surface);
+        }
+        
+        .maintenance-actions .btn-error {
+            background-color: var(--color-error);
+            color: var(--color-surface);
+            border-color: var(--color-error);
+        }
+        
+        .maintenance-actions .btn-error:hover {
+            background-color: #dc2626;
+            border-color: #dc2626;
+            color: var(--color-surface);
+        }
+        
+        .maintenance-actions .btn .icon {
+            font-size: var(--font-size-sm);
+            line-height: 1;
+        }
+        
+        .maintenance-actions .btn .text {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
         }
         
         .btn-sm {
-            padding: var(--space-xs) var(--space-sm);
+            padding: var(--space-1) var(--space-2);
             font-size: var(--font-size-xs);
             border-radius: var(--radius-sm);
+            height: 28px;
+            min-width: 60px;
         }
     }
     
@@ -737,26 +803,91 @@
         
         .mobile-card-actions {
             display: flex;
-            gap: var(--space-xs);
+            gap: var(--space-2);
             padding: var(--space-md);
             background: var(--gray-50);
             border-top: 1px solid var(--color-border);
-            overflow-x: auto;
         }
         
         .mobile-card-actions .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
             flex: 1;
-            min-width: 0;
-            padding: var(--space-sm) var(--space-md);
-            font-size: var(--font-size-xs);
+            padding: var(--space-3) var(--space-2);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            border-radius: var(--radius-md);
             text-align: center;
             white-space: nowrap;
+            min-height: 44px;
+            transition: all var(--transition);
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .mobile-card-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .mobile-card-actions .btn:active {
+            transform: translateY(0);
+        }
+        
+        .mobile-card-actions .btn-secondary {
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            border-color: var(--color-border);
+        }
+        
+        .mobile-card-actions .btn-secondary:hover {
+            background-color: var(--gray-100);
+            color: var(--color-text);
+            border-color: var(--gray-300);
+        }
+        
+        .mobile-card-actions .btn-primary {
+            background-color: var(--color-primary);
+            color: var(--color-surface);
+            border-color: var(--color-primary);
+        }
+        
+        .mobile-card-actions .btn-primary:hover {
+            background-color: var(--primary-700);
+            border-color: var(--primary-700);
+            color: var(--color-surface);
+        }
+        
+        .mobile-card-actions .btn-error {
+            background-color: var(--color-error);
+            color: var(--color-surface);
+            border-color: var(--color-error);
+        }
+        
+        .mobile-card-actions .btn-error:hover {
+            background-color: #dc2626;
+            border-color: #dc2626;
+            color: var(--color-surface);
+        }
+        
+        .mobile-card-actions .btn .icon {
+            font-size: var(--font-size-base);
+            line-height: 1;
+        }
+        
+        .mobile-card-actions .btn .text {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
         }
         
         .mobile-btn-sm {
-            padding: var(--space-xs) var(--space-sm);
-            font-size: var(--font-size-xs);
+            padding: var(--space-2) var(--space-3);
+            font-size: var(--font-size-sm);
             white-space: nowrap;
+            min-height: 40px;
         }
     }
 </style>
