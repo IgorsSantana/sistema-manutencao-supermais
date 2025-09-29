@@ -3,58 +3,162 @@
 {% block title %}{{ manutencao.titulo }} - Detalhes da Manutenção{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h3>🔧 {{ manutencao.titulo }}</h3>
-    </div>
-    <div class="card-body">
-        <div class="grid">
-            <div>
-                <h4>Informações da Manutenção</h4>
-                <p><strong>📅 Data:</strong> {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}</p>
-                <p><strong>💰 Preço Total:</strong> <span class="price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</span></p>
-                <p><strong>📝 Tipo:</strong> 
-                    {% if manutencao.tipo == 'loja' %}
-                        🏪 Loja
-                    {% else %}
-                        🚗 Veículo
-                    {% endif %}
-                </p>
-                
-                {% if manutencao.tipo == 'loja' and manutencao.loja %}
-                    <p><strong>🏪 Loja:</strong> 
-                        <a href="/lojas/{{ manutencao.loja.id }}">{{ manutencao.loja.nome }}</a>
-                    </p>
-                {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
-                    <p><strong>🚗 Veículo:</strong> 
-                        <a href="/veiculos/{{ manutencao.veiculo.id }}">{{ manutencao.veiculo.placa }} - {{ manutencao.veiculo.modelo }}</a>
-                    </p>
-                {% endif %}
+<!-- ===== DESKTOP LAYOUT ===== -->
+<div class="details-desktop">
+    <div class="details-container">
+        <!-- Header da Manutenção -->
+        <div class="maintenance-header">
+            <div class="maintenance-icon">
+                {% if manutencao.tipo == 'loja' %}🏪{% else %}🚗{% endif %}
             </div>
-            <div>
-                <h4>Detalhes</h4>
-                <p><strong>📅 Registrado em:</strong> {{ manutencao.data_cadastro.strftime('%d/%m/%Y às %H:%M') }}</p>
-                {% if manutencao.fotos %}
-                    <p><strong>📷 Fotos:</strong> {{ manutencao.fotos|length }} anexada(s)</p>
-                {% endif %}
+            <div class="maintenance-title">
+                <h1>{{ manutencao.titulo }}</h1>
+                <div class="maintenance-meta">
+                    <span class="maintenance-type">
+                        {% if manutencao.tipo == 'loja' %}Loja{% else %}Veículo{% endif %}
+                    </span>
+                    <span class="maintenance-date">
+                        📅 {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}
+                    </span>
+                </div>
+            </div>
+            <div class="maintenance-price">
+                <div class="price-value">R$ {{ "%.2f"|format(manutencao.preco_total) }}</div>
+                <div class="price-label">Valor Total</div>
             </div>
         </div>
-        
-        {% if manutencao.descricao %}
-            <div style="margin-top: 1rem;">
-                <h4>Descrição</h4>
-                <p style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-color);">
-                    {{ manutencao.descricao|replace('\n', '<br>')|safe }}
-                </p>
+
+        <!-- Informações Principais -->
+        <div class="details-grid">
+            <div class="info-card">
+                <div class="info-header">
+                    <h3>📋 Informações Gerais</h3>
+                </div>
+                <div class="info-content">
+                    <div class="info-item">
+                        <span class="info-label">Título:</span>
+                        <span class="info-value">{{ manutencao.titulo }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Tipo:</span>
+                        <span class="info-value">
+                            {% if manutencao.tipo == 'loja' %}
+                                🏪 Manutenção de Loja
+                            {% else %}
+                                🚗 Manutenção de Veículo
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Data:</span>
+                        <span class="info-value">{{ manutencao.data_manutencao.strftime('%d/%m/%Y às %H:%M') }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Valor:</span>
+                        <span class="info-value price-highlight">R$ {{ "%.2f"|format(manutencao.preco_total) }}</span>
+                    </div>
+                </div>
             </div>
+
+            <div class="info-card">
+                <div class="info-header">
+                    <h3>
+                        {% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}
+                    </h3>
+                </div>
+                <div class="info-content">
+                    {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                        <div class="info-item">
+                            <span class="info-label">Nome:</span>
+                            <span class="info-value">{{ manutencao.loja.nome }}</span>
+                        </div>
+                        {% if manutencao.loja.endereco %}
+                        <div class="info-item">
+                            <span class="info-label">Endereço:</span>
+                            <span class="info-value">{{ manutencao.loja.endereco }}</span>
+                        </div>
+                        {% endif %}
+                        {% if manutencao.loja.telefone %}
+                        <div class="info-item">
+                            <span class="info-label">Telefone:</span>
+                            <span class="info-value">{{ manutencao.loja.telefone }}</span>
+                        </div>
+                        {% endif %}
+                    {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                        <div class="info-item">
+                            <span class="info-label">Placa:</span>
+                            <span class="info-value">{{ manutencao.veiculo.placa }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Modelo:</span>
+                            <span class="info-value">{{ manutencao.veiculo.modelo }}</span>
+                        </div>
+                        {% if manutencao.veiculo.marca %}
+                        <div class="info-item">
+                            <span class="info-label">Marca:</span>
+                            <span class="info-value">{{ manutencao.veiculo.marca }}</span>
+                        </div>
+                        {% endif %}
+                        {% if manutencao.veiculo.ano %}
+                        <div class="info-item">
+                            <span class="info-label">Ano:</span>
+                            <span class="info-value">{{ manutencao.veiculo.ano }}</span>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="info-item">
+                            <span class="info-value text-muted">Informações não disponíveis</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Descrição -->
+        {% if manutencao.descricao %}
+        <div class="description-card">
+            <div class="info-header">
+                <h3>📄 Descrição da Manutenção</h3>
+            </div>
+            <div class="description-content">
+                {{ manutencao.descricao|replace('\n', '<br>')|safe }}
+            </div>
+        </div>
         {% endif %}
-        
+
+        <!-- Fotos -->
+        {% if manutencao.fotos %}
+        <div class="photos-card">
+            <div class="info-header">
+                <h3>📷 Fotos da Manutenção</h3>
+                <span class="photo-count">{{ manutencao.fotos|length }} foto(s)</span>
+            </div>
+            <div class="photos-grid">
+                {% for foto in manutencao.fotos %}
+                <div class="photo-item">
+                    <img src="{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}" 
+                         alt="Foto da manutenção {{ loop.index }}" 
+                         onclick="openImageModal('{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}')"
+                         class="photo-image">
+                    <div class="photo-info">
+                        <span class="photo-date">{{ foto.data_upload.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Botões de Ação -->
         <div class="action-buttons">
             <div class="primary-actions">
-                <a href="/manutencoes/{{ manutencao.id }}/editar" role="button" class="btn btn-primary">
+                <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" class="btn btn-primary">
                     ✏️ Editar Manutenção
                 </a>
-                <form method="POST" action="/manutencoes/{{ manutencao.id }}/apagar" style="display: inline;" 
+                <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" style="display: inline;" 
                       onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção? Esta ação não pode ser desfeita.')">
                     <button type="submit" class="btn btn-error">
                         🗑️ Apagar Manutenção
@@ -63,81 +167,566 @@
             </div>
             
             <div class="secondary-actions">
-                <a href="/manutencoes" role="button" class="btn btn-secondary">← Voltar para Manutenções</a>
+                <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary">← Voltar para Manutenções</a>
                 {% if manutencao.tipo == 'loja' and manutencao.loja %}
-                    <a href="/lojas/{{ manutencao.loja.id }}" role="button" class="btn btn-secondary">🏪 Ver Loja</a>
+                    <a href="{{ url_for('detalhes_loja', loja_id=manutencao.loja.id) }}" class="btn btn-secondary">🏪 Ver Loja</a>
                 {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
-                    <a href="/veiculos/{{ manutencao.veiculo.id }}" role="button" class="btn btn-secondary">🚗 Ver Veículo</a>
+                    <a href="{{ url_for('detalhes_veiculo', veiculo_id=manutencao.veiculo.id) }}" class="btn btn-secondary">🚗 Ver Veículo</a>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-{% if manutencao.fotos %}
-<div class="card">
-    <div class="card-header">
-        <h3>📷 Fotos da Manutenção</h3>
+<!-- ===== MOBILE LAYOUT ===== -->
+<div class="details-mobile">
+    <div class="mobile-header">
+        <div class="mobile-icon">
+            {% if manutencao.tipo == 'loja' %}🏪{% else %}🚗{% endif %}
+        </div>
+        <div class="mobile-title">
+            <h1>{{ manutencao.titulo }}</h1>
+            <p class="mobile-meta">
+                {% if manutencao.tipo == 'loja' %}Loja{% else %}Veículo{% endif %} • 
+                {{ manutencao.data_manutencao.strftime('%d/%m/%Y') }}
+            </p>
+        </div>
+        <div class="mobile-price">
+            R$ {{ "%.2f"|format(manutencao.preco_total) }}
+        </div>
     </div>
-    <div class="card-body">
-        <div class="photo-gallery">
-            {% for foto in manutencao.fotos %}
-                <div class="photo-item">
-                    <img src="/uploads/{{ foto.nome_arquivo }}" 
-                         alt="Foto da manutenção {{ loop.index }}" 
-                         onclick="openImageModal('/uploads/{{ foto.nome_arquivo }}')"
-                         style="cursor: pointer;">
-                    <div style="padding: 0.5rem; text-align: center; font-size: 0.8rem; color: #1f2937; font-weight: 600;">
-                        {{ foto.data_upload.strftime('%d/%m/%Y %H:%M') }}
-                    </div>
+
+    <div class="mobile-content">
+        <!-- Informações Básicas -->
+        <div class="mobile-card">
+            <h3>📋 Informações</h3>
+            <div class="mobile-info">
+                <div class="mobile-info-item">
+                    <span class="label">Tipo:</span>
+                    <span class="value">
+                        {% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}
+                    </span>
                 </div>
-            {% endfor %}
+                <div class="mobile-info-item">
+                    <span class="label">Data:</span>
+                    <span class="value">{{ manutencao.data_manutencao.strftime('%d/%m/%Y às %H:%M') }}</span>
+                </div>
+                <div class="mobile-info-item">
+                    <span class="label">Valor:</span>
+                    <span class="value price">R$ {{ "%.2f"|format(manutencao.preco_total) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loja/Veículo -->
+        <div class="mobile-card">
+            <h3>
+                {% if manutencao.tipo == 'loja' %}🏪 Loja{% else %}🚗 Veículo{% endif %}
+            </h3>
+            <div class="mobile-info">
+                {% if manutencao.tipo == 'loja' and manutencao.loja %}
+                    <div class="mobile-info-item">
+                        <span class="label">Nome:</span>
+                        <span class="value">{{ manutencao.loja.nome }}</span>
+                    </div>
+                    {% if manutencao.loja.endereco %}
+                    <div class="mobile-info-item">
+                        <span class="label">Endereço:</span>
+                        <span class="value">{{ manutencao.loja.endereco }}</span>
+                    </div>
+                    {% endif %}
+                {% elif manutencao.tipo == 'veiculo' and manutencao.veiculo %}
+                    <div class="mobile-info-item">
+                        <span class="label">Placa:</span>
+                        <span class="value">{{ manutencao.veiculo.placa }}</span>
+                    </div>
+                    <div class="mobile-info-item">
+                        <span class="label">Modelo:</span>
+                        <span class="value">{{ manutencao.veiculo.modelo }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Descrição -->
+        {% if manutencao.descricao %}
+        <div class="mobile-card">
+            <h3>📄 Descrição</h3>
+            <div class="mobile-description">
+                {{ manutencao.descricao|replace('\n', '<br>')|safe }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Fotos Mobile -->
+        {% if manutencao.fotos %}
+        <div class="mobile-card">
+            <h3>📷 Fotos ({{ manutencao.fotos|length }})</h3>
+            <div class="mobile-photos">
+                {% for foto in manutencao.fotos %}
+                <div class="mobile-photo-item">
+                    <img src="{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}" 
+                         alt="Foto {{ loop.index }}" 
+                         onclick="openImageModal('{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}')"
+                         class="mobile-photo">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Botões Mobile -->
+        <div class="mobile-actions">
+            <a href="{{ url_for('editar_manutencao', manutencao_id=manutencao.id) }}" class="btn btn-primary mobile-btn">
+                ✏️ Editar
+            </a>
+            <form method="POST" action="{{ url_for('apagar_manutencao', manutencao_id=manutencao.id) }}" 
+                  onsubmit="return confirm('⚠️ Tem certeza que deseja apagar esta manutenção?')">
+                <button type="submit" class="btn btn-error mobile-btn">
+                    🗑️ Apagar
+                </button>
+            </form>
+            <a href="{{ url_for('listar_manutencoes') }}" class="btn btn-secondary mobile-btn">
+                ← Voltar
+            </a>
         </div>
     </div>
 </div>
-{% endif %}
 
-<!-- Modal para visualizar imagem em tamanho maior -->
-<div id="imageModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9);">
-    <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-        <img id="modalImage" style="max-width: 90%; max-height: 90%; object-fit: contain;">
-        <button onclick="closeImageModal()" style="position: absolute; top: 20px; right: 35px; color: white; font-size: 40px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
+<!-- Modal para visualizar imagem -->
+<div id="imageModal" class="image-modal">
+    <div class="modal-content">
+        <img id="modalImage" class="modal-image">
+        <button onclick="closeImageModal()" class="modal-close">&times;</button>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .action-buttons {
-        margin-top: var(--space-lg);
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-md);
-    }
-    
-    .primary-actions {
-        display: flex;
-        gap: var(--space-md);
-        flex-wrap: wrap;
-    }
-    
-    .secondary-actions {
-        display: flex;
-        gap: var(--space-md);
-        flex-wrap: wrap;
-    }
-    
-    @media (max-width: 768px) {
-        .primary-actions,
-        .secondary-actions {
-            flex-direction: column;
+    /* ===== DESKTOP LAYOUT ===== */
+    @media (min-width: 1024px) {
+        .details-mobile {
+            display: none !important;
         }
         
-        .primary-actions .btn,
-        .secondary-actions .btn {
+        .details-desktop {
+            display: block;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+        }
+        
+        .details-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xl);
+        }
+        
+        /* Header da Manutenção */
+        .maintenance-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .maintenance-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+        }
+        
+        .maintenance-title {
+            flex: 1;
+        }
+        
+        .maintenance-title h1 {
+            margin: 0 0 var(--space-sm) 0;
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .maintenance-meta {
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+        }
+        
+        .maintenance-type {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        .maintenance-date {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+        
+        .maintenance-price {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        
+        .price-value {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+            line-height: 1.2;
+        }
+        
+        .price-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-top: var(--space-xs);
+        }
+        
+        /* Grid de Informações */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+        }
+        
+        .info-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .info-header {
+            background: var(--primary-50);
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .info-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .info-content {
+            padding: var(--space-lg);
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: var(--color-text);
+            text-align: right;
+            flex: 1;
+        }
+        
+        .price-highlight {
+            color: var(--color-primary);
+            font-weight: var(--font-weight-bold);
+        }
+        
+        /* Descrição */
+        .description-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .description-content {
+            padding: var(--space-lg);
+            line-height: 1.6;
+            color: var(--color-text);
+        }
+        
+        /* Fotos */
+        .photos-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+        
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--space-md);
+            padding: var(--space-lg);
+        }
+        
+        .photo-item {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            transition: transform var(--transition);
+        }
+        
+        .photo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .photo-image {
             width: 100%;
+            height: 150px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        .photo-info {
+            padding: var(--space-sm);
             text-align: center;
         }
+        
+        .photo-date {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+        
+        .photo-count {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        /* Botões de Ação */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+        
+        .primary-actions {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+        
+        .secondary-actions {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+    }
+    
+    /* ===== MOBILE LAYOUT ===== */
+    @media (max-width: 1023px) {
+        .details-desktop {
+            display: none !important;
+        }
+        
+        .details-mobile {
+            display: block;
+            padding: var(--space-md);
+        }
+        
+        .mobile-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .mobile-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .mobile-title {
+            flex: 1;
+        }
+        
+        .mobile-title h1 {
+            margin: 0 0 var(--space-xs) 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+        
+        .mobile-meta {
+            margin: 0;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .mobile-price {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+            text-align: right;
+        }
+        
+        .mobile-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+        
+        .mobile-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+        
+        .mobile-card h3 {
+            margin: 0 0 var(--space-md) 0;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+        
+        .mobile-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+        
+        .mobile-info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: var(--space-xs) 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .mobile-info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .mobile-info-item .label {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            min-width: 80px;
+        }
+        
+        .mobile-info-item .value {
+            color: var(--color-text);
+            text-align: right;
+            flex: 1;
+        }
+        
+        .mobile-info-item .price {
+            color: var(--color-primary);
+            font-weight: var(--font-weight-bold);
+        }
+        
+        .mobile-description {
+            line-height: 1.6;
+            color: var(--color-text);
+        }
+        
+        .mobile-photos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-sm);
+        }
+        
+        .mobile-photo-item {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+        
+        .mobile-photo {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        .mobile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            margin-top: var(--space-lg);
+        }
+        
+        .mobile-btn {
+            width: 100%;
+            text-align: center;
+            padding: var(--space-md);
+        }
+    }
+    
+    /* ===== MODAL DE IMAGEM ===== */
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+    }
+    
+    .modal-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-image {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+    }
+    
+    .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 35px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .modal-close:hover {
+        opacity: 0.7;
     }
 </style>
 {% endblock %}

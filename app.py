@@ -341,6 +341,18 @@ def cadastrar_manutencao():
 @app.route('/manutencoes/<int:manutencao_id>')
 def detalhes_manutencao(manutencao_id):
     manutencao = Manutencao.query.get_or_404(manutencao_id)
+    
+    # Debug: verificar fotos
+    print(f"🔍 Debug - Manutenção {manutencao_id}:")
+    print(f"   - Título: {manutencao.titulo}")
+    print(f"   - Fotos encontradas: {len(manutencao.fotos) if manutencao.fotos else 0}")
+    
+    if manutencao.fotos:
+        for i, foto in enumerate(manutencao.fotos):
+            print(f"   - Foto {i+1}: {foto.nome_arquivo}")
+            print(f"     Caminho: {foto.caminho_arquivo}")
+            print(f"     Existe arquivo: {os.path.exists(foto.caminho_arquivo)}")
+    
     return render_template('detalhes_manutencao.html', manutencao=manutencao)
 
 @app.route('/manutencoes/<int:manutencao_id>/editar', methods=['GET', 'POST'])
@@ -511,7 +523,11 @@ def analise():
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except FileNotFoundError:
+        # Se o arquivo não for encontrado, retornar uma imagem placeholder
+        return send_from_directory(app.config['UPLOAD_FOLDER'], 'placeholder.jpg', mimetype='image/jpeg')
 
 # --- Rota para API de estatísticas ---
 @app.route('/api/estatisticas')
