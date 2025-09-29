@@ -524,6 +524,17 @@
             display: flex;
             gap: var(--space-xs);
             flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .maintenance-actions .btn {
+            flex: 1;
+            min-width: 0;
+            padding: var(--space-sm) var(--space-md);
+            font-size: var(--font-size-xs);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            white-space: nowrap;
         }
         
         .btn-sm {
@@ -731,6 +742,15 @@
             background: var(--gray-50);
             border-top: 1px solid var(--color-border);
             overflow-x: auto;
+        }
+        
+        .mobile-card-actions .btn {
+            flex: 1;
+            min-width: 0;
+            padding: var(--space-sm) var(--space-md);
+            font-size: var(--font-size-xs);
+            text-align: center;
+            white-space: nowrap;
         }
         
         .mobile-btn-sm {
