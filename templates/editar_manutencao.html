@@ -102,9 +102,9 @@
                     <div class="existing-photos">
                         {% for foto in manutencao.fotos %}
                         <div class="photo-item">
-                            <img src="{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}" 
+                            <img src="{{ foto.get_url() }}" 
                                  alt="Foto {{ loop.index }}" 
-                                 onclick="openImageModal('{{ url_for('uploaded_file', filename=foto.nome_arquivo) }}')"
+                                 onclick="openImageModal('{{ foto.get_url() }}')"
                                  class="existing-photo">
                             <div class="photo-info">
                                 <span class="photo-name">{{ foto.nome_arquivo }}</span>

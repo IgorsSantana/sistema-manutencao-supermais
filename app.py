@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from image_utils import resize_image, process_uploaded_images
+from cloudinary_utils import upload_to_cloudinary, delete_from_cloudinary, is_cloudinary_configured
 
 try:
     from dotenv import load_dotenv
@@ -137,11 +138,24 @@ class Manutencao(db.Model):
 class FotoManutencao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome_arquivo = db.Column(db.String(100), nullable=False)
-    caminho_arquivo = db.Column(db.String(200), nullable=False)
+    caminho_arquivo = db.Column(db.String(200), nullable=True)  # Pode ser None se usar Cloudinary
     data_upload = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Campos do Cloudinary
+    cloudinary_public_id = db.Column(db.String(200), nullable=True)
+    cloudinary_url = db.Column(db.String(500), nullable=True)
+    cloudinary_secure_url = db.Column(db.String(500), nullable=True)
     
     # Chave estrangeira
     manutencao_id = db.Column(db.Integer, db.ForeignKey('manutencao.id'), nullable=False)
+    
+    def get_url(self):
+        """Retorna a URL da imagem (Cloudinary ou local)"""
+        if self.cloudinary_secure_url:
+            return self.cloudinary_secure_url
+        elif self.caminho_arquivo:
+            return url_for('uploaded_file', filename=self.nome_arquivo)
+        return None
     
     def __repr__(self):
         return f'<FotoManutencao {self.nome_arquivo}>'
@@ -310,22 +324,43 @@ def cadastrar_manutencao():
             
             if fotos_validas:
                 try:
-                    # Processar e redimensionar todas as fotos
-                    processed_files = process_uploaded_images(fotos_validas, app.config['UPLOAD_FOLDER'])
+                    # Verificar se Cloudinary está configurado
+                    use_cloudinary = is_cloudinary_configured()
                     
-                    for filename in processed_files:
-                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    if use_cloudinary:
+                        print("☁️ Usando Cloudinary para upload de imagens...")
+                        # Upload para Cloudinary
+                        for foto in fotos_validas:
+                            cloudinary_result = upload_to_cloudinary(foto)
+                            if cloudinary_result:
+                                foto_manutencao = FotoManutencao(
+                                    nome_arquivo=cloudinary_result['filename'],
+                                    cloudinary_public_id=cloudinary_result['public_id'],
+                                    cloudinary_url=cloudinary_result['url'],
+                                    cloudinary_secure_url=cloudinary_result['secure_url'],
+                                    manutencao_id=nova_manutencao.id
+                                )
+                                db.session.add(foto_manutencao)
+                                fotos_uploaded += 1
+                    else:
+                        print("💾 Usando armazenamento local...")
+                        # Processar e redimensionar todas as fotos localmente
+                        processed_files = process_uploaded_images(fotos_validas, app.config['UPLOAD_FOLDER'])
                         
-                        foto_manutencao = FotoManutencao(
-                            nome_arquivo=filename,
-                            caminho_arquivo=filepath,
-                            manutencao_id=nova_manutencao.id
-                        )
-                        db.session.add(foto_manutencao)
-                        fotos_uploaded += 1
+                        for filename in processed_files:
+                            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                            
+                            foto_manutencao = FotoManutencao(
+                                nome_arquivo=filename,
+                                caminho_arquivo=filepath,
+                                manutencao_id=nova_manutencao.id
+                            )
+                            db.session.add(foto_manutencao)
+                            fotos_uploaded += 1
                     
                     if fotos_uploaded > 0:
-                        flash(f'{fotos_uploaded} foto(s) anexada(s) e otimizada(s) com sucesso!', 'success')
+                        storage_type = "Cloudinary" if use_cloudinary else "local"
+                        flash(f'{fotos_uploaded} foto(s) anexada(s) e otimizada(s) com sucesso! ({storage_type})', 'success')
                         
                 except Exception as e:
                     print(f"Erro ao processar fotos: {str(e)}")
@@ -386,21 +421,41 @@ def editar_manutencao(manutencao_id):
             
             if fotos_validas:
                 try:
-                    # Processar e redimensionar todas as fotos
-                    processed_files = process_uploaded_images(fotos_validas, app.config['UPLOAD_FOLDER'])
+                    # Verificar se Cloudinary está configurado
+                    use_cloudinary = is_cloudinary_configured()
                     
-                    for filename in processed_files:
-                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    if use_cloudinary:
+                        print("☁️ Usando Cloudinary para upload de novas imagens...")
+                        # Upload para Cloudinary
+                        for foto in fotos_validas:
+                            cloudinary_result = upload_to_cloudinary(foto)
+                            if cloudinary_result:
+                                foto_manutencao = FotoManutencao(
+                                    nome_arquivo=cloudinary_result['filename'],
+                                    cloudinary_public_id=cloudinary_result['public_id'],
+                                    cloudinary_url=cloudinary_result['url'],
+                                    cloudinary_secure_url=cloudinary_result['secure_url'],
+                                    manutencao_id=manutencao.id
+                                )
+                                db.session.add(foto_manutencao)
+                    else:
+                        print("💾 Usando armazenamento local para novas imagens...")
+                        # Processar e redimensionar todas as fotos localmente
+                        processed_files = process_uploaded_images(fotos_validas, app.config['UPLOAD_FOLDER'])
                         
-                        foto_manutencao = FotoManutencao(
-                            nome_arquivo=filename,
-                            caminho_arquivo=filepath,
-                            manutencao_id=manutencao.id
-                        )
-                        db.session.add(foto_manutencao)
+                        for filename in processed_files:
+                            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                            
+                            foto_manutencao = FotoManutencao(
+                                nome_arquivo=filename,
+                                caminho_arquivo=filepath,
+                                manutencao_id=manutencao.id
+                            )
+                            db.session.add(foto_manutencao)
                     
-                    if processed_files:
-                        flash(f'{len(processed_files)} nova(s) foto(s) anexada(s) e otimizada(s) com sucesso!', 'success')
+                    if fotos_validas:
+                        storage_type = "Cloudinary" if use_cloudinary else "local"
+                        flash(f'{len(fotos_validas)} nova(s) foto(s) anexada(s) e otimizada(s) com sucesso! ({storage_type})', 'success')
                         
                 except Exception as e:
                     print(f"Erro ao processar novas fotos: {str(e)}")
@@ -425,10 +480,21 @@ def apagar_manutencao(manutencao_id):
     
     # Apagar fotos associadas
     for foto in manutencao.fotos:
-        # Remover arquivo físico
-        foto_path = os.path.join(app.config['UPLOAD_FOLDER'], foto.nome_arquivo)
-        if os.path.exists(foto_path):
-            os.remove(foto_path)
+        # Remover do Cloudinary se existir
+        if foto.cloudinary_public_id:
+            try:
+                delete_from_cloudinary(foto.cloudinary_public_id)
+                print(f"🗑️ Foto deletada do Cloudinary: {foto.cloudinary_public_id}")
+            except Exception as e:
+                print(f"⚠️ Erro ao deletar foto do Cloudinary: {e}")
+        
+        # Remover arquivo físico local se existir
+        if foto.caminho_arquivo and os.path.exists(foto.caminho_arquivo):
+            try:
+                os.remove(foto.caminho_arquivo)
+                print(f"🗑️ Arquivo local deletado: {foto.caminho_arquivo}")
+            except Exception as e:
+                print(f"⚠️ Erro ao deletar arquivo local: {e}")
         
         # Remover do banco
         db.session.delete(foto)
