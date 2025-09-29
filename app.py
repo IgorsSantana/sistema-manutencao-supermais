@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from werkzeug.utils import secure_filename
 from image_utils import resize_image, process_uploaded_images
 from cloudinary_utils import upload_to_cloudinary, delete_from_cloudinary, is_cloudinary_configured
@@ -55,10 +56,8 @@ def ensure_db_tables(func):
             with app.app_context():
                 # Verificar se as tabelas existem fazendo uma query simples
                 db.session.execute("SELECT 1 FROM loja LIMIT 1")
-                # Garantir que temos usuários padrão
-                if Usuario.query.count() == 0:
-                    print("🔧 Tabelas OK, mas não há usuários. Criando agora...")
-                    create_default_users_if_needed()
+                # Tabelas existem e estão funcionando
+                print("✅ Tabelas verificadas com sucesso")
         except Exception:
             # Se não existem, criar agora
             try:
@@ -66,8 +65,30 @@ def ensure_db_tables(func):
                     db.create_all()
                     db.session.commit()
                     print("🔧 Tabelas criadas durante requisição")
-                    # Criar usuários padrão também
-                    create_default_users_if_needed()
+                    
+                    # Tentar migração para Cloudinary se for PostgreSQL
+                    if DATABASE_URL:
+                        try:
+                            print("🔄 Aplicando migração para Cloudinary...")
+                            db.session.execute(text("""
+                                ALTER TABLE foto_manutencao 
+                                ADD COLUMN IF NOT EXISTS cloudinary_public_id VARCHAR(200),
+                                ADD COLUMN IF NOT EXISTS cloudinary_url VARCHAR(500),
+                                ADD COLUMN IF NOT EXISTS cloudinary_secure_url VARCHAR(500)
+                            """))
+                            
+                            # Tornar caminho_arquivo nullable
+                            db.session.execute(text("""
+                                ALTER TABLE foto_manutencao 
+                                ALTER COLUMN caminho_arquivo DROP NOT NULL
+                            """))
+                            
+                            db.session.commit()
+                            print("✅ Migração para Cloudinary aplicada!")
+                        except Exception as migration_error:
+                            print(f"⚠️  Erro na migração (pode ser que já exista): {migration_error}")
+                            db.session.rollback()
+                            
             except Exception as e:
                 print(f"⚠️  Erro criando tabelas durante request: {e}")
         
@@ -655,6 +676,9 @@ def init_database_tables():
             try:
                 db.create_all()
                 print("✅ Schema PostgreSQL configurado!")
+                
+                # Migração será aplicada automaticamente pelo decorator ensure_db_tables
+                
                 return True
             except Exception as e:
                 print(f"⚠️  Erro ao criar tabelas PostgreSQL: {e}")
@@ -662,6 +686,9 @@ def init_database_tables():
                 db.session.rollback()
                 db.create_all()
                 print("✅ Schema PostgreSQL configurado na segunda tentativa!")
+                
+                # Migração será aplicada automaticamente pelo decorator ensure_db_tables
+                
                 return True
         else:
             print("💾 SQLite detectado - criando/verificando tabelas...")
