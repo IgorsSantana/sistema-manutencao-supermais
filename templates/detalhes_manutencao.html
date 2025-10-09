@@ -138,13 +138,20 @@
             </div>
             <div class="photos-grid">
                 {% for foto in manutencao.fotos %}
-                <div class="photo-item">
+                <div class="photo-item" 
+                     data-photo-index="{{ loop.index0 }}"
+                     data-photo-url="{{ foto.get_url() }}"
+                     onclick="lightbox.open({{ loop.index0 }})">
                    <img src="{{ foto.get_url() }}" 
                         alt="Foto da manutenção {{ loop.index }}" 
-                        onclick="openImageModal('{{ foto.get_url() }}')"
-                        class="photo-image">
+                        class="photo-image"
+                        loading="lazy">
                     <div class="photo-info">
                         <span class="photo-date">{{ foto.data_upload.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <div class="photo-overlay">
+                        <span class="photo-overlay-icon">🔍</span>
+                        <span class="photo-overlay-text">Clique para ampliar</span>
                     </div>
                 </div>
                 {% endfor %}
@@ -264,11 +271,17 @@
             <h3>📷 Fotos ({{ manutencao.fotos|length }})</h3>
             <div class="mobile-photos">
                 {% for foto in manutencao.fotos %}
-                <div class="mobile-photo-item">
+                <div class="mobile-photo-item"
+                     data-photo-index="{{ loop.index0 }}"
+                     data-photo-url="{{ foto.get_url() }}"
+                     onclick="lightbox.open({{ loop.index0 }})">
                     <img src="{{ foto.get_url() }}" 
                          alt="Foto {{ loop.index }}" 
-                         onclick="openImageModal('{{ foto.get_url() }}')"
-                         class="mobile-photo">
+                         class="mobile-photo"
+                         loading="lazy">
+                    <div class="mobile-photo-overlay">
+                        <span class="mobile-overlay-icon">🔍</span>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -293,11 +306,88 @@
     </div>
 </div>
 
-<!-- Modal para visualizar imagem -->
-<div id="imageModal" class="image-modal">
-    <div class="modal-content">
-        <img id="modalImage" class="modal-image">
-        <button onclick="closeImageModal()" class="modal-close">&times;</button>
+<!-- ===== LIGHTBOX PROFISSIONAL ===== -->
+<div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Visualizador de fotos">
+    <!-- Overlay de fundo -->
+    <div class="lightbox-overlay" onclick="lightbox.close()"></div>
+    
+    <!-- Container principal -->
+    <div class="lightbox-container">
+        <!-- Botão fechar -->
+        <button class="lightbox-close" 
+                onclick="lightbox.close()" 
+                aria-label="Fechar visualizador"
+                title="Fechar (Esc)">
+            <span class="close-icon">&times;</span>
+        </button>
+        
+        <!-- Contador de fotos -->
+        <div class="lightbox-counter" id="lightboxCounter" aria-live="polite">
+            <span id="currentPhoto">1</span> / <span id="totalPhotos">1</span>
+        </div>
+        
+        <!-- Botão anterior -->
+        <button class="lightbox-nav lightbox-prev" 
+                onclick="lightbox.prev()" 
+                aria-label="Foto anterior"
+                title="Anterior (← ou Swipe)">
+            <span class="nav-icon">‹</span>
+        </button>
+        
+        <!-- Container da imagem -->
+        <div class="lightbox-image-container">
+            <img id="lightboxImage" 
+                 class="lightbox-image" 
+                 alt="Foto da manutenção"
+                 onload="lightbox.onImageLoad()">
+            
+            <!-- Loading spinner -->
+            <div class="lightbox-loading" id="lightboxLoading">
+                <div class="loading-spinner"></div>
+                <p>Carregando imagem...</p>
+            </div>
+        </div>
+        
+        <!-- Botão próximo -->
+        <button class="lightbox-nav lightbox-next" 
+                onclick="lightbox.next()" 
+                aria-label="Próxima foto"
+                title="Próxima (→ ou Swipe)">
+            <span class="nav-icon">›</span>
+        </button>
+        
+        <!-- Toolbar inferior -->
+        <div class="lightbox-toolbar">
+            <button class="toolbar-btn" 
+                    onclick="lightbox.zoomIn()" 
+                    aria-label="Ampliar"
+                    title="Ampliar">
+                <span class="toolbar-icon">🔍+</span>
+            </button>
+            <button class="toolbar-btn" 
+                    onclick="lightbox.zoomOut()" 
+                    aria-label="Reduzir"
+                    title="Reduzir">
+                <span class="toolbar-icon">🔍-</span>
+            </button>
+            <button class="toolbar-btn" 
+                    onclick="lightbox.resetZoom()" 
+                    aria-label="Ajustar zoom"
+                    title="Ajustar">
+                <span class="toolbar-icon">⊡</span>
+            </button>
+            <button class="toolbar-btn" 
+                    onclick="lightbox.downloadImage()" 
+                    aria-label="Baixar imagem"
+                    title="Baixar">
+                <span class="toolbar-icon">⬇</span>
+            </button>
+        </div>
+        
+        <!-- Miniaturas -->
+        <div class="lightbox-thumbnails" id="lightboxThumbnails">
+            <!-- Preenchido dinamicamente -->
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -486,19 +576,59 @@
             border-radius: var(--radius-md);
             overflow: hidden;
             border: 1px solid var(--color-border);
-            transition: transform var(--transition);
+            transition: all var(--transition);
+            cursor: pointer;
+            position: relative;
         }
         
         .photo-item:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
             box-shadow: var(--shadow-lg);
+            border-color: var(--color-primary);
+        }
+        
+        .photo-item:hover .photo-overlay {
+            opacity: 1;
         }
         
         .photo-image {
             width: 100%;
             height: 150px;
             object-fit: cover;
-            cursor: pointer;
+            display: block;
+            transition: transform var(--transition);
+        }
+        
+        .photo-item:hover .photo-image {
+            transform: scale(1.05);
+        }
+        
+        .photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            opacity: 0;
+            transition: opacity var(--transition);
+            color: white;
+        }
+        
+        .photo-overlay-icon {
+            font-size: var(--font-size-3xl);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .photo-overlay-text {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
         
         .photo-info {
@@ -665,13 +795,43 @@
             border-radius: var(--radius-md);
             overflow: hidden;
             border: 1px solid var(--color-border);
+            position: relative;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        
+        .mobile-photo-item:active {
+            transform: scale(0.95);
         }
         
         .mobile-photo {
             width: 100%;
             height: 120px;
             object-fit: cover;
-            cursor: pointer;
+            display: block;
+        }
+        
+        .mobile-photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+        
+        .mobile-photo-item:active .mobile-photo-overlay {
+            opacity: 1;
+        }
+        
+        .mobile-overlay-icon {
+            font-size: var(--font-size-2xl);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
         
         .mobile-actions {
@@ -688,76 +848,823 @@
         }
     }
     
-    /* ===== MODAL DE IMAGEM ===== */
-    .image-modal {
+    /* ===== LIGHTBOX PROFISSIONAL ===== */
+    
+    /* Container principal do lightbox */
+    .lightbox {
         display: none;
         position: fixed;
-        z-index: 1000;
-        left: 0;
         top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
+        z-index: var(--z-modal);
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+        overflow: hidden;
     }
     
-    .modal-content {
+    .lightbox.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+    }
+    
+    /* Overlay de fundo */
+    .lightbox-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(10px);
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* Container principal */
+    .lightbox-container {
         position: relative;
         width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
+        z-index: 1;
     }
     
-    .modal-image {
-        max-width: 90%;
-        max-height: 90%;
-        object-fit: contain;
-    }
-    
-    .modal-close {
+    /* Botão fechar */
+    .lightbox-close {
         position: absolute;
-        top: 20px;
-        right: 35px;
+        top: var(--space-4);
+        right: var(--space-4);
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-full);
         color: white;
-        font-size: 40px;
-        font-weight: bold;
-        background: none;
-        border: none;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        font-size: var(--font-size-3xl);
+        font-weight: var(--font-weight-light);
     }
     
-    .modal-close:hover {
-        opacity: 0.7;
+    .lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: rotate(90deg) scale(1.1);
+    }
+    
+    .lightbox-close:active {
+        transform: rotate(90deg) scale(0.95);
+    }
+    
+    .close-icon {
+        line-height: 1;
+        display: block;
+    }
+    
+    /* Contador de fotos */
+    .lightbox-counter {
+        position: absolute;
+        top: var(--space-4);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: var(--space-3) var(--space-5);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-semibold);
+        z-index: 10;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: var(--shadow-lg);
+        letter-spacing: 0.5px;
+    }
+    
+    #currentPhoto {
+        color: var(--primary-300);
+        font-weight: var(--font-weight-bold);
+    }
+    
+    /* Botões de navegação */
+    .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-full);
+        color: white;
+        font-size: var(--font-size-4xl);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        user-select: none;
+    }
+    
+    .lightbox-nav:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .lightbox-nav:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    
+    .lightbox-nav:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    .lightbox-prev {
+        left: var(--space-4);
+    }
+    
+    .lightbox-next {
+        right: var(--space-4);
+    }
+    
+    .nav-icon {
+        line-height: 1;
+        display: block;
+        font-weight: var(--font-weight-light);
+    }
+    
+    /* Container da imagem */
+    .lightbox-image-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 100px 120px 200px 120px;
+    }
+    
+    .lightbox-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-2xl);
+        cursor: grab;
+        transition: transform var(--transition);
+        animation: zoomIn 0.3s ease-out;
+    }
+    
+    @keyframes zoomIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .lightbox-image.dragging {
+        cursor: grabbing;
+    }
+    
+    /* Loading spinner */
+    .lightbox-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-4);
+        color: white;
+    }
+    
+    .lightbox-loading.active {
+        display: flex;
+    }
+    
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .lightbox-loading p {
+        font-size: var(--font-size-sm);
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Toolbar inferior */
+    .lightbox-toolbar {
+        position: absolute;
+        bottom: var(--space-8);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: var(--space-2);
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: var(--space-3);
+        border-radius: var(--radius-full);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: var(--shadow-lg);
+        z-index: 10;
+    }
+    
+    .toolbar-btn {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-lg);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+        font-size: var(--font-size-base);
+    }
+    
+    .toolbar-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: scale(1.1);
+    }
+    
+    .toolbar-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .toolbar-icon {
+        line-height: 1;
+        display: block;
+    }
+    
+    /* Miniaturas */
+    .lightbox-thumbnails {
+        position: absolute;
+        bottom: var(--space-20);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: var(--space-2);
+        padding: var(--space-2);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        border-radius: var(--radius-lg);
+        max-width: 90%;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) transparent;
+        z-index: 10;
+    }
+    
+    .lightbox-thumbnails::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .lightbox-thumbnails::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .lightbox-thumbnails::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: var(--radius-full);
+    }
+    
+    .thumbnail-item {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all var(--transition);
+        opacity: 0.6;
+    }
+    
+    .thumbnail-item:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    .thumbnail-item.active {
+        border-color: var(--primary-400);
+        opacity: 1;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.3);
+    }
+    
+    .thumbnail-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Responsividade Mobile */
+    @media (max-width: 768px) {
+        .lightbox-image-container {
+            padding: 80px var(--space-4) 180px var(--space-4);
+        }
+        
+        .lightbox-close {
+            top: var(--space-3);
+            right: var(--space-3);
+            width: 48px;
+            height: 48px;
+            font-size: var(--font-size-2xl);
+        }
+        
+        .lightbox-counter {
+            top: var(--space-3);
+            font-size: var(--font-size-sm);
+            padding: var(--space-2) var(--space-4);
+        }
+        
+        .lightbox-nav {
+            width: 48px;
+            height: 48px;
+            font-size: var(--font-size-3xl);
+        }
+        
+        .lightbox-prev {
+            left: var(--space-2);
+        }
+        
+        .lightbox-next {
+            right: var(--space-2);
+        }
+        
+        .lightbox-toolbar {
+            bottom: var(--space-6);
+            padding: var(--space-2);
+            gap: var(--space-1);
+        }
+        
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            font-size: var(--font-size-sm);
+        }
+        
+        .lightbox-thumbnails {
+            bottom: var(--space-16);
+            max-width: 95%;
+        }
+        
+        .thumbnail-item {
+            width: 48px;
+            height: 48px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .lightbox-image-container {
+            padding: 70px var(--space-2) 160px var(--space-2);
+        }
+        
+        .lightbox-nav {
+            width: 40px;
+            height: 40px;
+            font-size: var(--font-size-2xl);
+        }
+        
+        .lightbox-thumbnails {
+            display: none;
+        }
+        
+        .lightbox-toolbar {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
     }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    function openImageModal(imageSrc) {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        modal.style.display = 'block';
-        modalImg.src = imageSrc;
-    }
+/**
+ * ===== LIGHTBOX PROFISSIONAL =====
+ * Sistema completo de visualização de fotos com navegação, zoom e touch gestures
+ */
+
+const lightbox = {
+    // Estado do lightbox
+    isOpen: false,
+    currentIndex: 0,
+    photos: [],
+    zoomLevel: 1,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    translateX: 0,
+    translateY: 0,
     
-    function closeImageModal() {
-        document.getElementById('imageModal').style.display = 'none';
-    }
+    // Elementos DOM
+    elements: {},
     
-    // Fechar modal clicando fora da imagem
-    document.getElementById('imageModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeImageModal();
+    /**
+     * Inicializa o lightbox
+     */
+    init() {
+        console.log('🖼️ Inicializando Lightbox...');
+        
+        // Coletar todas as fotos da página
+        this.collectPhotos();
+        
+        // Cachear elementos DOM
+        this.cacheElements();
+        
+        // Configurar event listeners
+        this.setupEventListeners();
+        
+        // Criar miniaturas
+        this.createThumbnails();
+        
+        console.log(`✅ Lightbox inicializado com ${this.photos.length} foto(s)`);
+    },
+    
+    /**
+     * Coleta todas as fotos da página
+     */
+    collectPhotos() {
+        const photoItems = document.querySelectorAll('[data-photo-url]');
+        this.photos = Array.from(photoItems).map(item => ({
+            url: item.dataset.photoUrl,
+            index: parseInt(item.dataset.photoIndex)
+        }));
+    },
+    
+    /**
+     * Cacheia elementos DOM
+     */
+    cacheElements() {
+        this.elements = {
+            lightbox: document.getElementById('lightbox'),
+            image: document.getElementById('lightboxImage'),
+            loading: document.getElementById('lightboxLoading'),
+            currentPhoto: document.getElementById('currentPhoto'),
+            totalPhotos: document.getElementById('totalPhotos'),
+            prevBtn: document.querySelector('.lightbox-prev'),
+            nextBtn: document.querySelector('.lightbox-next'),
+            thumbnails: document.getElementById('lightboxThumbnails')
+        };
+        
+        // Atualizar total de fotos
+        this.elements.totalPhotos.textContent = this.photos.length;
+    },
+    
+    /**
+     * Configura event listeners
+     */
+    setupEventListeners() {
+        // Teclado
+        document.addEventListener('keydown', (e) => {
+            if (!this.isOpen) return;
+            
+            switch(e.key) {
+                case 'Escape':
+                    this.close();
+                    break;
+                case 'ArrowLeft':
+                    this.prev();
+                    break;
+                case 'ArrowRight':
+                    this.next();
+                    break;
+                case '+':
+                case '=':
+                    this.zoomIn();
+                    break;
+                case '-':
+                case '_':
+                    this.zoomOut();
+                    break;
+                case '0':
+                    this.resetZoom();
+                    break;
+            }
+        });
+        
+        // Touch gestures para mobile
+        this.setupTouchGestures();
+        
+        // Drag para mover imagem com zoom
+        this.setupImageDrag();
+    },
+    
+    /**
+     * Configura gestos de touch para mobile
+     */
+    setupTouchGestures() {
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartY = 0;
+        let touchEndY = 0;
+        
+        this.elements.lightbox.addEventListener('touchstart', (e) => {
+            if (!this.isOpen) return;
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        });
+        
+        this.elements.lightbox.addEventListener('touchend', (e) => {
+            if (!this.isOpen) return;
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            this.handleSwipe(touchStartX, touchEndX, touchStartY, touchEndY);
+        });
+    },
+    
+    /**
+     * Processa gestos de swipe
+     */
+    handleSwipe(startX, endX, startY, endY) {
+        const diffX = startX - endX;
+        const diffY = startY - endY;
+        const threshold = 50;
+        
+        // Swipe horizontal tem prioridade
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            if (Math.abs(diffX) > threshold) {
+                if (diffX > 0) {
+                    // Swipe left - próxima foto
+                    this.next();
+                } else {
+                    // Swipe right - foto anterior
+                    this.prev();
+                }
+            }
         }
-    });
+    },
     
-    // Fechar modal com tecla ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeImageModal();
+    /**
+     * Configura drag da imagem quando com zoom
+     */
+    setupImageDrag() {
+        const img = this.elements.image;
+        
+        img.addEventListener('mousedown', (e) => {
+            if (this.zoomLevel === 1) return;
+            
+            this.isDragging = true;
+            this.startX = e.clientX - this.translateX;
+            this.startY = e.clientY - this.translateY;
+            img.classList.add('dragging');
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isDragging) return;
+            
+            this.translateX = e.clientX - this.startX;
+            this.translateY = e.clientY - this.startY;
+            this.updateImageTransform();
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (this.isDragging) {
+                this.isDragging = false;
+                img.classList.remove('dragging');
+            }
+        });
+    },
+    
+    /**
+     * Cria miniaturas das fotos
+     */
+    createThumbnails() {
+        this.elements.thumbnails.innerHTML = '';
+        
+        this.photos.forEach((photo, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'thumbnail-item';
+            thumb.innerHTML = `<img src="${photo.url}" alt="Miniatura ${index + 1}">`;
+            thumb.onclick = () => this.goToPhoto(index);
+            
+            this.elements.thumbnails.appendChild(thumb);
+        });
+    },
+    
+    /**
+     * Abre o lightbox em uma foto específica
+     */
+    open(index = 0) {
+        this.currentIndex = index;
+        this.isOpen = true;
+        this.zoomLevel = 1;
+        this.translateX = 0;
+        this.translateY = 0;
+        
+        // Prevenir scroll do body
+        document.body.style.overflow = 'hidden';
+        
+        // Mostrar lightbox
+        this.elements.lightbox.classList.add('active');
+        
+        // Carregar foto
+        this.loadPhoto(this.currentIndex);
+        
+        // Atualizar UI
+        this.updateUI();
+        
+        console.log(`📷 Lightbox aberto - Foto ${this.currentIndex + 1}/${this.photos.length}`);
+    },
+    
+    /**
+     * Fecha o lightbox
+     */
+    close() {
+        this.isOpen = false;
+        
+        // Restaurar scroll do body
+        document.body.style.overflow = '';
+        
+        // Esconder lightbox
+        this.elements.lightbox.classList.remove('active');
+        
+        // Reset zoom
+        this.resetZoom();
+        
+        console.log('✖️ Lightbox fechado');
+    },
+    
+    /**
+     * Vai para a foto anterior
+     */
+    prev() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            this.loadPhoto(this.currentIndex);
+            this.updateUI();
         }
-    });
+    },
+    
+    /**
+     * Vai para a próxima foto
+     */
+    next() {
+        if (this.currentIndex < this.photos.length - 1) {
+            this.currentIndex++;
+            this.loadPhoto(this.currentIndex);
+            this.updateUI();
+        }
+    },
+    
+    /**
+     * Vai para uma foto específica
+     */
+    goToPhoto(index) {
+        if (index >= 0 && index < this.photos.length) {
+            this.currentIndex = index;
+            this.loadPhoto(this.currentIndex);
+            this.updateUI();
+        }
+    },
+    
+    /**
+     * Carrega uma foto
+     */
+    loadPhoto(index) {
+        const photo = this.photos[index];
+        
+        // Mostrar loading
+        this.elements.loading.classList.add('active');
+        
+        // Resetar zoom
+        this.resetZoom();
+        
+        // Carregar imagem
+        this.elements.image.src = photo.url;
+        this.elements.image.alt = `Foto ${index + 1} de ${this.photos.length}`;
+    },
+    
+    /**
+     * Callback quando imagem termina de carregar
+     */
+    onImageLoad() {
+        // Esconder loading
+        this.elements.loading.classList.remove('active');
+        
+        console.log(`✅ Foto ${this.currentIndex + 1} carregada`);
+    },
+    
+    /**
+     * Atualiza a UI
+     */
+    updateUI() {
+        // Atualizar contador
+        this.elements.currentPhoto.textContent = this.currentIndex + 1;
+        
+        // Atualizar botões de navegação
+        this.elements.prevBtn.disabled = this.currentIndex === 0;
+        this.elements.nextBtn.disabled = this.currentIndex === this.photos.length - 1;
+        
+        // Atualizar miniaturas ativas
+        const thumbnails = this.elements.thumbnails.querySelectorAll('.thumbnail-item');
+        thumbnails.forEach((thumb, index) => {
+            thumb.classList.toggle('active', index === this.currentIndex);
+        });
+        
+        // Scroll para miniatura ativa
+        const activeThumb = thumbnails[this.currentIndex];
+        if (activeThumb) {
+            activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    },
+    
+    /**
+     * Zoom in
+     */
+    zoomIn() {
+        if (this.zoomLevel < 3) {
+            this.zoomLevel += 0.5;
+            this.updateImageTransform();
+            console.log(`🔍+ Zoom: ${this.zoomLevel}x`);
+        }
+    },
+    
+    /**
+     * Zoom out
+     */
+    zoomOut() {
+        if (this.zoomLevel > 1) {
+            this.zoomLevel -= 0.5;
+            this.updateImageTransform();
+            console.log(`🔍- Zoom: ${this.zoomLevel}x`);
+        }
+    },
+    
+    /**
+     * Reseta o zoom
+     */
+    resetZoom() {
+        this.zoomLevel = 1;
+        this.translateX = 0;
+        this.translateY = 0;
+        this.updateImageTransform();
+    },
+    
+    /**
+     * Atualiza transform da imagem (zoom e posição)
+     */
+    updateImageTransform() {
+        const transform = `scale(${this.zoomLevel}) translate(${this.translateX / this.zoomLevel}px, ${this.translateY / this.zoomLevel}px)`;
+        this.elements.image.style.transform = transform;
+    },
+    
+    /**
+     * Download da imagem atual
+     */
+    downloadImage() {
+        const photo = this.photos[this.currentIndex];
+        const link = document.createElement('a');
+        link.href = photo.url;
+        link.download = `foto_manutencao_${this.currentIndex + 1}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log(`⬇️ Download iniciado - Foto ${this.currentIndex + 1}`);
+    }
+};
+
+// Inicializar quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => {
+    lightbox.init();
+});
 </script>
 {% endblock %}
